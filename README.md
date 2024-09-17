@@ -68,6 +68,7 @@ Each WebSocket endpoint would:
 - POST **/users/create**: Create a new user.
 - GET **/users/{userId}**: Retrieve user details.
 - POST **/users/authenticate**: Authenticate a user and provide JWT (if applicable).
+- GET **/users/status**: Status endpoint to check the health of the user service.
 
 ##### Chat Service HTTP
 
@@ -83,6 +84,7 @@ Each WebSocket endpoint would:
   - Request body: `{ "name": "<roomName>" }`
 - POST **/rooms/{roomId}/join**: Join a chat room.
 - POST **/rooms/{roomId}/leave**: Leave a chat room.
+- GET **/rooms/status**: Status endpoint to check the health of the chat service.
 
 #### gRPC Endpoints
 
@@ -97,6 +99,9 @@ Each WebSocket endpoint would:
 - **GetUser**: Retrieve user details.
   - **Request**: `GetUserRequest { int32 userId }`
   - **Response**: `GetUserResponse { string username, string email }`
+- **GetUserStatus**: Check the health of the user service.
+  - **Request**: `GetUserStatusRequest {}`
+  - **Response**: `GetUserStatusResponse { bool healthy }`
 
 ##### Chat Service gRPC
 
@@ -118,6 +123,9 @@ Each WebSocket endpoint would:
 - **JoinRoom**: Allow a user to join a specific chat room.
   - **Request**: `JoinRoomRequest { int32 userId, int32 roomId }`
   - **Response**: `JoinRoomResponse { bool success }`
+- **GetRoomsStatus**: Check the health of the chat service.
+  - **Request**: `GetRoomsStatusRequest {}`
+  - **Response**: `GetRoomsStatusResponse { bool healthy }`
 
 ## Deployment and Scaling
 
