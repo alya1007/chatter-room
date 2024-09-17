@@ -41,7 +41,7 @@ Chat applications require a high level of responsiveness and low latency. This m
 
 - **User Service**: Uses its own database to manage user data, ensuring that user information is isolated and secure. Suitable for storing user credentials, profiles, and preferences.
 
-- **Chat Service**: Maintains a separate database for chat data, including private messages and chat room content. This allows for scalability and performance optimizations specific to chat operations.
+- **Chat Service**: Maintains a separate database for chat data, including private messages and chat room content. This allows for scalability and performance optimizations specific to chat operations. Unit tests will be written to ensure the correctness of the data.
 
 ### Data Access
 
@@ -126,6 +126,15 @@ Each WebSocket endpoint would:
 - **GetRoomsStatus**: Check the health of the chat service.
   - **Request**: `GetRoomsStatusRequest {}`
   - **Response**: `GetRoomsStatusResponse { bool healthy }`
+
+For each of the requests it will be necessary to implement a task timeout, to avoid blocking the service in case of a failure. If a user sends a message and the request to the chat service takes too long (perhaps because the chat service is down), a timeout is set. After this timeout, the client or API Gateway will cancel the request and return an error to the user, like "Message delivery failed."
+
+### Concurrent Tasks Limit
+
+#### At the API Gateway Level
+
+- Rate-limiting mechanism to control the number of incoming requests, ensuring that only a certain number of requests are allowed through at a given time.
+- Concurrency limit per endpoint, so each service (e.g., Chat Service, User Service) can handle only a specific number of concurrent tasks.
 
 ## Deployment and Scaling
 
