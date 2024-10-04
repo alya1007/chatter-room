@@ -73,6 +73,9 @@ publish/
 *.pubxml
 *.azurePubxml
 
+# Ignore appsettings Development
+**/appsettings.Development.json
+
 # NuGet Packages Directory
 ## TODO: If you have NuGet Package Restore enabled, uncomment the next line
 packages/
@@ -309,3 +312,5 @@ Thumbs.db
 # IDE-specific
 *.sln
 *.csproj.user
+
+.vscode/
