@@ -3,9 +3,18 @@ using UserService.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                      .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true);
+
+string connectionString = builder.Configuration["CustomSettings:connectionString"] ?? "";
+string databaseName = builder.Configuration["CustomSettings:databaseName"] ?? "";
+
+// Console.WriteLine($"Connection String: {connectionString}");
+// Console.WriteLine($"Database Name: {databaseName}");
+
 builder.Services.AddGrpc();
 
-builder.Services.AddSingleton<UserServiceDbContext>(new UserServiceDbContext("mongodb://localhost:27017", "UserServiceDb"));
+builder.Services.AddSingleton<UserServiceDbContext>(new UserServiceDbContext(connectionString, databaseName));
 
 var app = builder.Build();
 
