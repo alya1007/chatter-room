@@ -15,11 +15,11 @@ message RegisterUserRequest {
 }
 
 message RegisterUserResponse {
-    string user_id = 1;
+    string message = 1;
 }
 
 message LoginUserRequest {
-    string username = 1;
+    string email = 1;
     string password = 2;
 }
 
