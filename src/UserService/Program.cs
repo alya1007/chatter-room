@@ -9,9 +9,6 @@ builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnC
 string connectionString = builder.Configuration["CustomSettings:connectionString"] ?? "";
 string databaseName = builder.Configuration["CustomSettings:databaseName"] ?? "";
 
-// Console.WriteLine($"Connection String: {connectionString}");
-// Console.WriteLine($"Database Name: {databaseName}");
-
 builder.Services.AddGrpc();
 
 builder.Services.AddSingleton<UserServiceDbContext>(new UserServiceDbContext(connectionString, databaseName));
