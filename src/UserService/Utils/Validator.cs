@@ -1,43 +1,19 @@
-namespace UserService.Utils
+using System.ComponentModel.DataAnnotations;
+using Grpc.Core;
+
+namespace UserService.Utils;
+public static class CustomValidator
 {
-    public static class Validator
+    public static void Validate(object model)
     {
-        public static bool IsValidEmail(string email)
+        var context = new ValidationContext(model, serviceProvider: null, items: null);
+        var results = new List<ValidationResult>();
+
+        bool isValid = Validator.TryValidateObject(model, context, results, validateAllProperties: true);
+        if (!isValid)
         {
-            if (string.IsNullOrWhiteSpace(email))
-            {
-                return false;
-            }
-
-            try
-            {
-                var addr = new System.Net.Mail.MailAddress(email);
-                return addr.Address == email;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        public static bool IsValidPassword(string password)
-        {
-            if (string.IsNullOrWhiteSpace(password))
-            {
-                return false;
-            }
-
-            return password.Length >= 8;
-        }
-
-        public static bool IsValidUsername(string username)
-        {
-            if (string.IsNullOrWhiteSpace(username))
-            {
-                return false;
-            }
-
-            return username.Length >= 3;
+            var errors = string.Join(", ", results.Select(r => r.ErrorMessage));
+            throw new RpcException(new Status(StatusCode.InvalidArgument, $"Validation failed: {errors}"));
         }
     }
 }

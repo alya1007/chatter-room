@@ -24,28 +24,6 @@ public class UserManagementService : UserServiceManager.UserServiceManagerBase
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(request.Username) ||
-                string.IsNullOrWhiteSpace(request.Email) ||
-                string.IsNullOrWhiteSpace(request.Password))
-            {
-                throw new RpcException(new Status(StatusCode.InvalidArgument, "All fields (Username, Email, Password) are required."));
-            }
-
-            if (!Validator.IsValidEmail(request.Email))
-            {
-                throw new RpcException(new Status(StatusCode.InvalidArgument, "Invalid email address."));
-            }
-
-            if (!Validator.IsValidPassword(request.Password))
-            {
-                throw new RpcException(new Status(StatusCode.InvalidArgument, "Password must be at least 8 characters long."));
-            }
-
-            if (!Validator.IsValidUsername(request.Username))
-            {
-                throw new RpcException(new Status(StatusCode.InvalidArgument, "Username must be at least 3 characters long."));
-            }
-
             var user = new User
             {
                 Username = request.Username,
@@ -54,6 +32,8 @@ public class UserManagementService : UserServiceManager.UserServiceManagerBase
                 CreatedAt = DateTime.Now,
                 UpdatedAt = DateTime.Now
             };
+
+            CustomValidator.Validate(user);
 
             await _dbContext.Users.InsertOneAsync(user);
 
@@ -67,7 +47,7 @@ public class UserManagementService : UserServiceManager.UserServiceManagerBase
         {
             throw;
         }
-        catch (System.Exception)
+        catch (Exception)
         {
             throw new RpcException(new Status(StatusCode.Internal, "An error occurred while registering the user"));
         }
@@ -81,11 +61,6 @@ public class UserManagementService : UserServiceManager.UserServiceManagerBase
             if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
             {
                 throw new RpcException(new Status(StatusCode.InvalidArgument, "Email and Password are required."));
-            }
-
-            if (!Validator.IsValidEmail(request.Email))
-            {
-                throw new RpcException(new Status(StatusCode.InvalidArgument, "Invalid email address."));
             }
 
             var user = await _dbContext.Users
@@ -104,7 +79,7 @@ public class UserManagementService : UserServiceManager.UserServiceManagerBase
         {
             throw;
         }
-        catch (System.Exception)
+        catch (Exception)
         {
             throw new RpcException(new Status(StatusCode.Internal, "An error occurred while logging in"));
         }
@@ -131,7 +106,7 @@ public class UserManagementService : UserServiceManager.UserServiceManagerBase
         {
             throw;
         }
-        catch (System.Exception)
+        catch (Exception)
         {
             throw new RpcException(new Status(StatusCode.Internal, "An error occurred while fetching user profile"));
         }
