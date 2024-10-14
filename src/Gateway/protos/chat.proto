@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+option csharp_namespace = "ChatService.Protos";
+
+service ChatServiceManager {
+  rpc SendPrivateMessage (SendPrivateMessageRequest) returns (SendPrivateMessageResponse);
+  rpc GetPrivateChatHistory (GetPrivateChatHistoryRequest) returns (GetPrivateChatHistoryResponse);
+  // rpc SendRoomMessage (SendRoomMessageRequest) returns (SendRoomMessageResponse);
+  // rpc GetRoomHistory (GetRoomHistoryRequest) returns (GetRoomHistoryResponse);
+  // rpc CreateRoom (CreateRoomRequest) returns (CreateRoomResponse);
+  // rpc JoinRoom (JoinRoomRequest) returns (JoinRoomResponse);
+  // rpc LeaveRoom (LeaveRoomRequest) returns (LeaveRoomResponse);
+  // rpc AddUserToRoom (AddUserToRoomRequest) returns (AddUserToRoomResponse);
+  // rpc RemoveUserFromRoom (RemoveUserFromRoomRequest) returns (RemoveUserFromRoomResponse);
+}
+
+message ChatMessageProto {
+  string sender_id = 1;
+  string receiver_id = 2;
+  string message = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+}
+
+message SendPrivateMessageRequest {
+  string sender_id = 1;
+  string receiver_id = 2;
+  string message = 3;
+}
+
+message SendPrivateMessageResponse {
+  string message = 1;
+}
+
+message GetPrivateChatHistoryRequest {
+  string user_id = 1;
+  string receiver_id = 2;
+}
+
+message GetPrivateChatHistoryResponse {
+  repeated ChatMessageProto messages = 1;
+}
