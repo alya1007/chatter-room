@@ -35,7 +35,7 @@ message SendPrivateMessageResponse {
 }
 
 message GetPrivateChatHistoryRequest {
-  string user_id = 1;
+  string sender_id = 1;
   string receiver_id = 2;
 }
 
