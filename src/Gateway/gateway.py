@@ -1,78 +1,101 @@
-from flask import Flask, request, jsonify
-import requests
-import pybreaker  # type: ignore
-from concurrent.futures import ThreadPoolExecutor
-import asyncio
+import grpc  # type: ignore
+from flask import Flask, jsonify, request
+
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), 'protos'))
+sys.path.append(os.path.join(os.path.dirname(__file__), 'utils'))
+
+
+import user_pb2_grpc  # type: ignore
+import user_pb2  # type: ignore
+import chat_pb2_grpc  # type: ignore
+import chat_pb2  # type: ignore
+
+
+import status_codes_translator as code_t # type: ignore
 
 app = Flask(__name__)
 
-# Task Timeout
-REQUEST_TIMEOUT = 5
 
-# Circuit Breaker
-circuit_breaker = pybreaker.CircuitBreaker(fail_max=3, reset_timeout=60)
-
-# Service Discovery
 services = {
-    "user_service": "http://localhost:5001",
-    "chat_service": "http://localhost:5002"
+    "user_service": "localhost:5002",
+    "chat_service": "localhost:5001"
 }
 
-# Concurrent tasks limit
-executor = ThreadPoolExecutor(max_workers=10)
+user_channel = grpc.insecure_channel(services["user_service"])
+chat_channel = grpc.insecure_channel(services["chat_service"])
 
-# Circuit breaker for user service
-
-
-@circuit_breaker
-def call_user_service(path, method="GET", data=None):
-    url = f"{services['user_service'][0]}/{path}"
-    response = requests.request(
-        method, url, json=data, timeout=REQUEST_TIMEOUT)
-    return response.json(), response.status_code
-
-# Gateway status endpoint
+user_service_stub = user_pb2_grpc.UserServiceManagerStub(user_channel)
+chat_service_stub = chat_pb2_grpc.ChatServiceManagerStub(chat_channel)
 
 
-@app.route("/status")
-def status():
-    return jsonify({"status": "ok"}), 200
-
-# User Service Status Endpoint (Proxy)
-
-
-@app.route('/user-service/status', methods=['GET'])
-def user_service_status():
-    try:
-        response = call_user_service("status")
-        return jsonify(response)
-    except pybreaker.CircuitBreakerError:
-        return jsonify({"error": "User service unavailable (circuit open)"}), 503
-
-# Timeouts for Other Requests
-
-
-@app.route('/user-service/register', methods=['POST'])
+@app.route("/user-service/register", methods=["POST"])
 def register_user():
+    data = request.get_json()
     try:
-        data = request.get_json()
-        response = call_user_service("register", method="POST", data=data)
-        return jsonify(response)
-    except request.Timeout:
-        return jsonify({"error": "User service request timeout"}), 504
-    except pybreaker.CircuitBreakerError:
-        return jsonify({"error": "User service unavailable (circuit open)"}), 503
-
-# Limiting concurrent tasks using asyncio
+        response = user_service_stub.RegisterUser(
+            user_pb2.RegisterUserRequest(username=data["username"], password=data["password"], email=data["email"]))
+        return jsonify({"message": response.message})
+    except grpc.RpcError as e:
+        return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
 
 
-@app.route('/chat/send', methods=['POST'])
-async def send_message():
-    async with asyncio.Semaphore(10):  # Limit concurrent requests to 10
-        data = request.get_json()
-        response = requests.post(
-            f"{services['chat_service'][0]}/send", json=data, timeout=REQUEST_TIMEOUT)
-        return jsonify(response.json())
+@app.route('/user-service/login', methods=['POST'])
+def login_user():
+    data = request.get_json()
+    try:
+        response = user_service_stub.LoginUser(
+            user_pb2.LoginUserRequest(email=data["email"], password=data["password"]))
+        return jsonify({"token": response.token})
+    except grpc.RpcError as e:
+        return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
 
-if __name__ == '__main__':
+@app.route('/user-service/user/<user_id>', methods=['GET'])
+def get_user_profile(user_id):
+    try:
+        response = user_service_stub.GetUserProfile(user_pb2.GetUserProfileRequest(
+            user_id=user_id
+        ))
+        return jsonify({
+            "username": response.username,
+            "email": response.email
+        })
+    except grpc.RpcError as e:
+        return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
+
+
+@app.route('/chat-service/private/send', methods=['POST'])
+def send_private_message():
+    data = request.get_json()
+    try:
+        response = chat_service_stub.SendPrivateMessage(
+            chat_pb2.SendPrivateMessageRequest(sender_id=data["sender_id"], receiver_id=data["receiver_id"], message=data["message"]))
+        return jsonify({"message": response.message})
+    except grpc.RpcError as e:
+        return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
+    
+
+
+@app.route('/chat-service/private/history', methods=['POST'])
+def get_private_chat_history():
+    data = request.get_json()
+    try:
+        response = chat_service_stub.GetPrivateChatHistory(
+            chat_pb2.GetPrivateChatHistoryRequest(sender_id=data["sender_id"], receiver_id=data["receiver_id"]))
+        messages = []
+        for message in response.messages:
+            messages.append({
+                "sender_id": message.sender_id,
+                "receiver_id": message.receiver_id,
+                "message": message.message,
+                "created_at": message.created_at.ToJsonString(),
+                "updated_at": message.updated_at.ToJsonString()
+            })
+        return jsonify({"messages": messages})
+    except grpc.RpcError as e:
+        return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
+
+
+if __name__ == "__main__":
     app.run(port=5000)

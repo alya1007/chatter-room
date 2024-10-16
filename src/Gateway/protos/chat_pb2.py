@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11protos/chat.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xab\x01\n\x10\x43hatMessageProto\x12\x11\n\tsender_id\x18\x01 \x01(\t\x12\x13\n\x0breceiver_id\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t\x12.\n\ncreated_at\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12.\n\nupdated_at\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"T\n\x19SendPrivateMessageRequest\x12\x11\n\tsender_id\x18\x01 \x01(\t\x12\x13\n\x0breceiver_id\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t\"-\n\x1aSendPrivateMessageResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"D\n\x1cGetPrivateChatHistoryRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x13\n\x0breceiver_id\x18\x02 \x01(\t\"D\n\x1dGetPrivateChatHistoryResponse\x12#\n\x08messages\x18\x01 \x03(\x0b\x32\x11.ChatMessageProto2\xbb\x01\n\x12\x43hatServiceManager\x12M\n\x12SendPrivateMessage\x12\x1a.SendPrivateMessageRequest\x1a\x1b.SendPrivateMessageResponse\x12V\n\x15GetPrivateChatHistory\x12\x1d.GetPrivateChatHistoryRequest\x1a\x1e.GetPrivateChatHistoryResponseB\x15\xaa\x02\x12\x43hatService.Protosb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11protos/chat.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xab\x01\n\x10\x43hatMessageProto\x12\x11\n\tsender_id\x18\x01 \x01(\t\x12\x13\n\x0breceiver_id\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t\x12.\n\ncreated_at\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12.\n\nupdated_at\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"T\n\x19SendPrivateMessageRequest\x12\x11\n\tsender_id\x18\x01 \x01(\t\x12\x13\n\x0breceiver_id\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t\"-\n\x1aSendPrivateMessageResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"F\n\x1cGetPrivateChatHistoryRequest\x12\x11\n\tsender_id\x18\x01 \x01(\t\x12\x13\n\x0breceiver_id\x18\x02 \x01(\t\"D\n\x1dGetPrivateChatHistoryResponse\x12#\n\x08messages\x18\x01 \x03(\x0b\x32\x11.ChatMessageProto2\xbb\x01\n\x12\x43hatServiceManager\x12M\n\x12SendPrivateMessage\x12\x1a.SendPrivateMessageRequest\x1a\x1b.SendPrivateMessageResponse\x12V\n\x15GetPrivateChatHistory\x12\x1d.GetPrivateChatHistoryRequest\x1a\x1e.GetPrivateChatHistoryResponseB\x15\xaa\x02\x12\x43hatService.Protosb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -40,9 +40,9 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_SENDPRIVATEMESSAGERESPONSE']._serialized_start=314
   _globals['_SENDPRIVATEMESSAGERESPONSE']._serialized_end=359
   _globals['_GETPRIVATECHATHISTORYREQUEST']._serialized_start=361
-  _globals['_GETPRIVATECHATHISTORYREQUEST']._serialized_end=429
-  _globals['_GETPRIVATECHATHISTORYRESPONSE']._serialized_start=431
-  _globals['_GETPRIVATECHATHISTORYRESPONSE']._serialized_end=499
-  _globals['_CHATSERVICEMANAGER']._serialized_start=502
-  _globals['_CHATSERVICEMANAGER']._serialized_end=689
+  _globals['_GETPRIVATECHATHISTORYREQUEST']._serialized_end=431
+  _globals['_GETPRIVATECHATHISTORYRESPONSE']._serialized_start=433
+  _globals['_GETPRIVATECHATHISTORYRESPONSE']._serialized_end=501
+  _globals['_CHATSERVICEMANAGER']._serialized_start=504
+  _globals['_CHATSERVICEMANAGER']._serialized_end=691
 # @@protoc_insertion_point(module_scope)
