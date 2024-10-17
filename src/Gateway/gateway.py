@@ -4,7 +4,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'protos'))
 sys.path.append(os.path.join(os.path.dirname(__file__), 'utils'))
 
 
-import health_checker  # type: ignore
 import status_codes_translator as code_t  # type: ignore
 import chat_pb2  # type: ignore
 import chat_pb2_grpc  # type: ignore
