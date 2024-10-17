@@ -93,6 +93,8 @@ public class ChatManagementService : ChatServiceManager.ChatServiceManagerBase
                 throw new RpcException(new Status(StatusCode.InvalidArgument, "RoomName, Owner and Members are required."));
             }
 
+            // TO DO: Check if the creator and members exist in the database
+
             var room = new ChatRoom
             {
                 Name = request.RoomName,
@@ -112,6 +114,142 @@ public class ChatManagementService : ChatServiceManager.ChatServiceManagerBase
         catch (System.Exception)
         {
             throw new RpcException(new Status(StatusCode.Internal, "An error occurred while creating the room."));
+        }
+    }
+
+    public override async Task<AddUserToRoomResponse> AddUserToRoom(AddUserToRoomRequest request, ServerCallContext context)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.RoomId) || string.IsNullOrWhiteSpace(request.UserId))
+            {
+                throw new RpcException(new Status(StatusCode.InvalidArgument, "RoomId and UserId are required."));
+            }
+
+            var room = await _dbContext.ChatRooms.Find(x => x.Id == request.RoomId).FirstOrDefaultAsync();
+            if (room == null)
+            {
+                throw new RpcException(new Status(StatusCode.NotFound, "Room not found."));
+            }
+
+            room.Members.Add(request.UserId);
+            room.UpdatedAt = DateTime.Now;
+
+            var update = Builders<ChatRoom>.Update.Set(x => x.Members, room.Members).Set(x => x.UpdatedAt, room.UpdatedAt);
+            await _dbContext.ChatRooms.UpdateOneAsync(x => x.Id == request.RoomId, update);
+
+            return new AddUserToRoomResponse { Message = $"User {request.UserId} added to room {room.Name}" };
+        }
+        catch (RpcException)
+        {
+            throw;
+        }
+        catch (System.Exception)
+        {
+            throw new RpcException(new Status(StatusCode.Internal, "An error occurred while adding the user to the room."));
+        }
+    }
+
+    public override async Task<SendRoomMessageResponse> SendRoomMessage(SendRoomMessageRequest request, ServerCallContext context)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.SenderId) || string.IsNullOrWhiteSpace(request.RoomId) || string.IsNullOrWhiteSpace(request.Message))
+            {
+                throw new RpcException(new Status(StatusCode.InvalidArgument, "SenderId, RoomId and Message are required."));
+            }
+
+            var message = new RoomMessage
+            {
+                SenderId = request.SenderId,
+                RoomId = request.RoomId,
+                Message = request.Message,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now
+            };
+
+            await _dbContext.RoomMessages.InsertOneAsync(message);
+            return new SendRoomMessageResponse { Message = $"User {message.SenderId} sent message to room {message.RoomId}: {message.Message}" };
+        }
+        catch (RpcException)
+        {
+            throw;
+        }
+        catch (System.Exception)
+        {
+            throw new RpcException(new Status(StatusCode.Internal, "An error occurred while sending the message."));
+        }
+    }
+
+    public override async Task<GetRoomHistoryResponse> GetRoomHistory(GetRoomHistoryRequest request, ServerCallContext context)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.RoomId))
+            {
+                throw new RpcException(new Status(StatusCode.InvalidArgument, "RoomId is required."));
+            }
+
+            var filter = Builders<RoomMessage>.Filter.Where(x => x.RoomId == request.RoomId);
+            var messages = await _dbContext.RoomMessages.Find(filter).ToListAsync();
+
+            var response = new GetRoomHistoryResponse();
+            foreach (var message in messages)
+            {
+                response.Messages.Add(new RoomMessageProto
+                {
+                    Id = message.Id,
+                    SenderId = message.SenderId,
+                    RoomId = message.RoomId,
+                    Message = message.Message,
+                    CreatedAt = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(message.CreatedAt.ToUniversalTime()),
+                    UpdatedAt = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(message.UpdatedAt.ToUniversalTime())
+                });
+
+            }
+
+            return response;
+        }
+        catch (RpcException)
+        {
+            throw;
+        }
+        catch (System.Exception)
+        {
+            throw new RpcException(new Status(StatusCode.Internal, "An error occurred while fetching the chat history."));
+        }
+    }
+
+    public override async Task<LeaveRoomResponse> LeaveRoom(LeaveRoomRequest request, ServerCallContext context)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.RoomId) || string.IsNullOrWhiteSpace(request.UserId))
+            {
+                throw new RpcException(new Status(StatusCode.InvalidArgument, "RoomId and UserId are required."));
+            }
+
+            var room = await _dbContext.ChatRooms.Find(x => x.Id == request.RoomId).FirstOrDefaultAsync();
+            if (room == null)
+            {
+                throw new RpcException(new Status(StatusCode.NotFound, "Room not found."));
+            }
+
+            room.Members.Remove(request.UserId);
+            room.UpdatedAt = DateTime.Now;
+
+            var update = Builders<ChatRoom>.Update.Set(x => x.Members, room.Members).Set(x => x.UpdatedAt, room.UpdatedAt);
+            await _dbContext.ChatRooms.UpdateOneAsync(x => x.Id == request.RoomId, update);
+
+            return new LeaveRoomResponse { Message = $"User {request.UserId} left room {room.Name}" };
+        }
+        catch (RpcException)
+        {
+            throw;
+        }
+        catch (System.Exception)
+        {
+            throw new RpcException(new Status(StatusCode.Internal, "An error occurred while leaving the room."));
         }
     }
 }
