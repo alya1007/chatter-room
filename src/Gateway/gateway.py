@@ -1,19 +1,18 @@
-import grpc  # type: ignore
-from flask import Flask, jsonify, request
-
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), 'protos'))
 sys.path.append(os.path.join(os.path.dirname(__file__), 'utils'))
 
 
-import user_pb2_grpc  # type: ignore
-import user_pb2  # type: ignore
-import chat_pb2_grpc  # type: ignore
+import health_checker  # type: ignore
+import status_codes_translator as code_t  # type: ignore
 import chat_pb2  # type: ignore
+import chat_pb2_grpc  # type: ignore
+import user_pb2  # type: ignore
+import user_pb2_grpc  # type: ignore
+import grpc  # type: ignore
+from flask import Flask, jsonify, request
 
-
-import status_codes_translator as code_t # type: ignore
 
 app = Flask(__name__)
 
@@ -35,7 +34,10 @@ def register_user():
     data = request.get_json()
     try:
         response = user_service_stub.RegisterUser(
-            user_pb2.RegisterUserRequest(username=data["username"], password=data["password"], email=data["email"]))
+            user_pb2.RegisterUserRequest(
+                username=data["username"], password=data["password"], email=data["email"]),
+            timeout=5.0
+        )
         return jsonify({"message": response.message})
     except grpc.RpcError as e:
         return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
@@ -46,17 +48,18 @@ def login_user():
     data = request.get_json()
     try:
         response = user_service_stub.LoginUser(
-            user_pb2.LoginUserRequest(email=data["email"], password=data["password"]))
+            user_pb2.LoginUserRequest(email=data["email"], password=data["password"]), timeout=5.0)
         return jsonify({"token": response.token})
     except grpc.RpcError as e:
         return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
+
 
 @app.route('/user-service/user/<user_id>', methods=['GET'])
 def get_user_profile(user_id):
     try:
         response = user_service_stub.GetUserProfile(user_pb2.GetUserProfileRequest(
             user_id=user_id
-        ))
+        ), timeout=5.0)
         return jsonify({
             "username": response.username,
             "email": response.email
@@ -70,11 +73,10 @@ def send_private_message():
     data = request.get_json()
     try:
         response = chat_service_stub.SendPrivateMessage(
-            chat_pb2.SendPrivateMessageRequest(sender_id=data["sender_id"], receiver_id=data["receiver_id"], message=data["message"]))
+            chat_pb2.SendPrivateMessageRequest(sender_id=data["sender_id"], receiver_id=data["receiver_id"], message=data["message"]), timeout=5.0)
         return jsonify({"message": response.message})
     except grpc.RpcError as e:
         return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
-    
 
 
 @app.route('/chat-service/private/history', methods=['POST'])
@@ -82,7 +84,7 @@ def get_private_chat_history():
     data = request.get_json()
     try:
         response = chat_service_stub.GetPrivateChatHistory(
-            chat_pb2.GetPrivateChatHistoryRequest(sender_id=data["sender_id"], receiver_id=data["receiver_id"]))
+            chat_pb2.GetPrivateChatHistoryRequest(sender_id=data["sender_id"], receiver_id=data["receiver_id"]), timeout=5.0)
         messages = []
         for message in response.messages:
             messages.append({

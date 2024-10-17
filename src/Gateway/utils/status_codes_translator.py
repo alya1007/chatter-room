@@ -8,6 +8,7 @@ grpc_to_http_status_codes = {
     grpc.StatusCode.PERMISSION_DENIED: 403,
     grpc.StatusCode.UNAUTHENTICATED: 401,
     grpc.StatusCode.UNIMPLEMENTED: 501,
+    grpc.StatusCode.DEADLINE_EXCEEDED: 408,
     grpc.StatusCode.INTERNAL: 500
 }
 
