@@ -1,6 +1,6 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
-
+using Google.Protobuf.Collections;
 namespace ChatService.Models;
 
 public class ChatRoom
@@ -13,7 +13,8 @@ public class ChatRoom
 
     public required string Name { get; set; }
 
-    public required List<string> Members { get; set; }
+    [BsonRepresentation(BsonType.ObjectId)]
+    public required RepeatedField<string> Members { get; set; }
 
 
     [BsonDateTimeOptions(Kind = DateTimeKind.Local)]
