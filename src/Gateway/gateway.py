@@ -79,12 +79,12 @@ def send_private_message():
         return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
 
 
-@app.route('/chat-service/private/history', methods=['POST'])
-def get_private_chat_history():
+@app.route('/chat-service/private/<receiver_id>', methods=['POST'])
+def get_private_chat_history(receiver_id):
     data = request.get_json()
     try:
         response = chat_service_stub.GetPrivateChatHistory(
-            chat_pb2.GetPrivateChatHistoryRequest(sender_id=data["sender_id"], receiver_id=data["receiver_id"]), timeout=5.0)
+            chat_pb2.GetPrivateChatHistoryRequest(sender_id=data["sender_id"], receiver_id=receiver_id), timeout=5.0)
         messages = []
         for message in response.messages:
             messages.append({
@@ -95,6 +95,86 @@ def get_private_chat_history():
                 "updated_at": message.updated_at.ToJsonString()
             })
         return jsonify({"messages": messages})
+    except grpc.RpcError as e:
+        return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
+
+@app.route('/chat-service/rooms/create', methods=['POST'])
+def create_room():
+    data = request.get_json()
+    try:
+        response = chat_service_stub.CreateRoom(
+            chat_pb2.CreateRoomRequest(
+                room_name=data["room_name"],
+                creator_id=data["creator_id"],
+                members_ids=data["members_ids"]
+            ), timeout=5.0)
+        return jsonify({"message": response.message})
+    except grpc.RpcError as e:
+        return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
+
+
+@app.route('/chat-service/rooms/<room_id>/add', methods=['PUT'])
+def add_room_member(room_id):
+    data = request.get_json()
+    try:
+        response = chat_service_stub.AddUserToRoom(
+            chat_pb2.AddUserToRoomRequest(
+                room_id=room_id,
+                user_id=data["user_id"]
+            ), timeout=5.0)
+        return jsonify({"message": response.message})
+    except grpc.RpcError as e:
+        return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
+
+
+@app.route('/chat-service/rooms/<room_id>/send', methods=['POST'])
+def send_room_message(room_id):
+    data = request.get_json()
+    try:
+        response = chat_service_stub.SendRoomMessage(
+            chat_pb2.SendRoomMessageRequest(
+                room_id=room_id,
+                sender_id=data["sender_id"],
+                message=data["message"]
+            ), timeout=5.0)
+        return jsonify({"message": response.message})
+    except grpc.RpcError as e:
+        return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
+
+
+@app.route('/chat-service/rooms/<room_id>', methods=['GET'])
+def get_room_chat_history(room_id):
+    try:
+        response = chat_service_stub.GetRoomHistory(
+            chat_pb2.GetRoomHistoryRequest(
+                room_id=room_id
+            ), timeout=5.0)
+        messages = []
+        for message in response.messages:
+            messages.append({
+                "id": message.id,
+                "room_id": message.room_id,
+                "sender_id": message.sender_id,
+                "message": message.message,
+                "created_at": message.created_at.ToJsonString(),
+                "updated_at": message.updated_at.ToJsonString()
+            })
+
+        return jsonify({"messages": messages})
+    except grpc.RpcError as e:
+        return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
+
+
+@app.route('/chat-service/rooms/<room_id>/leave', methods=['PUT'])
+def leave_room(room_id):
+    data = request.get_json()
+    try:
+        response = chat_service_stub.LeaveRoom(
+            chat_pb2.LeaveRoomRequest(
+                room_id=room_id,
+                user_id=data["user_id"]
+            ), timeout=5.0)
+        return jsonify({"message": response.message})
     except grpc.RpcError as e:
         return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
 
