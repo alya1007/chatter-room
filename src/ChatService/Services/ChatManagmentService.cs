@@ -83,4 +83,35 @@ public class ChatManagementService : ChatServiceManager.ChatServiceManagerBase
             throw new RpcException(new Status(StatusCode.Internal, "An error occurred while fetching the chat history."));
         }
     }
+
+    public override async Task<CreateRoomResponse> CreateRoom(CreateRoomRequest request, ServerCallContext context)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.RoomName) || string.IsNullOrWhiteSpace(request.CreatorId) || request.MembersIds.Count == 0)
+            {
+                throw new RpcException(new Status(StatusCode.InvalidArgument, "RoomName, Owner and Members are required."));
+            }
+
+            var room = new ChatRoom
+            {
+                Name = request.RoomName,
+                Owner = request.CreatorId,
+                Members = request.MembersIds,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now
+            };
+
+            await _dbContext.ChatRooms.InsertOneAsync(room);
+            return new CreateRoomResponse { Message = $"Room {room.Name} created successfully" };
+        }
+        catch (RpcException)
+        {
+            throw;
+        }
+        catch (System.Exception)
+        {
+            throw new RpcException(new Status(StatusCode.Internal, "An error occurred while creating the room."));
+        }
+    }
 }
