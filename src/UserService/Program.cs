@@ -12,7 +12,7 @@ string databaseName = builder.Configuration["CustomSettings:databaseName"] ?? ""
 
 builder.Services.AddGrpc();
 
-builder.Services.AddGrpcHealthChecks().AddCheck("Server", () => HealthCheckResult.Healthy());
+builder.Services.AddGrpcHealthChecks().AddCheck("Sample", () => HealthCheckResult.Healthy());
 
 builder.Services.AddSingleton<UserServiceDbContext>(new UserServiceDbContext(connectionString, databaseName));
 
