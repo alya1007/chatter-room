@@ -12,5 +12,6 @@ public class ChatServiceDbContext
     }
 
     public IMongoCollection<ChatMessage> PrivateMessages => _database.GetCollection<ChatMessage>("private_messages");
-    // public IMongoCollection<ChatMessage> RoomMessages => _database.GetCollection<ChatMessage>("room_messages");
+    public IMongoCollection<ChatRoom> ChatRooms => _database.GetCollection<ChatRoom>("rooms");
+    public IMongoCollection<RoomMessage> RoomMessages => _database.GetCollection<RoomMessage>("room_messages");
 }
