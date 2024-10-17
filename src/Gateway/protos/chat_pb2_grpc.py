@@ -44,6 +44,31 @@ class ChatServiceManagerStub(object):
                 request_serializer=protos_dot_chat__pb2.GetPrivateChatHistoryRequest.SerializeToString,
                 response_deserializer=protos_dot_chat__pb2.GetPrivateChatHistoryResponse.FromString,
                 _registered_method=True)
+        self.CreateRoom = channel.unary_unary(
+                '/ChatServiceManager/CreateRoom',
+                request_serializer=protos_dot_chat__pb2.CreateRoomRequest.SerializeToString,
+                response_deserializer=protos_dot_chat__pb2.CreateRoomResponse.FromString,
+                _registered_method=True)
+        self.AddUserToRoom = channel.unary_unary(
+                '/ChatServiceManager/AddUserToRoom',
+                request_serializer=protos_dot_chat__pb2.AddUserToRoomRequest.SerializeToString,
+                response_deserializer=protos_dot_chat__pb2.AddUserToRoomResponse.FromString,
+                _registered_method=True)
+        self.SendRoomMessage = channel.unary_unary(
+                '/ChatServiceManager/SendRoomMessage',
+                request_serializer=protos_dot_chat__pb2.SendRoomMessageRequest.SerializeToString,
+                response_deserializer=protos_dot_chat__pb2.SendRoomMessageResponse.FromString,
+                _registered_method=True)
+        self.GetRoomHistory = channel.unary_unary(
+                '/ChatServiceManager/GetRoomHistory',
+                request_serializer=protos_dot_chat__pb2.GetRoomHistoryRequest.SerializeToString,
+                response_deserializer=protos_dot_chat__pb2.GetRoomHistoryResponse.FromString,
+                _registered_method=True)
+        self.LeaveRoom = channel.unary_unary(
+                '/ChatServiceManager/LeaveRoom',
+                request_serializer=protos_dot_chat__pb2.LeaveRoomRequest.SerializeToString,
+                response_deserializer=protos_dot_chat__pb2.LeaveRoomResponse.FromString,
+                _registered_method=True)
 
 
 class ChatServiceManagerServicer(object):
@@ -56,14 +81,37 @@ class ChatServiceManagerServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def GetPrivateChatHistory(self, request, context):
-        """rpc SendRoomMessage (SendRoomMessageRequest) returns (SendRoomMessageResponse);
-        rpc GetRoomHistory (GetRoomHistoryRequest) returns (GetRoomHistoryResponse);
-        rpc CreateRoom (CreateRoomRequest) returns (CreateRoomResponse);
-        rpc JoinRoom (JoinRoomRequest) returns (JoinRoomResponse);
-        rpc LeaveRoom (LeaveRoomRequest) returns (LeaveRoomResponse);
-        rpc AddUserToRoom (AddUserToRoomRequest) returns (AddUserToRoomResponse);
-        rpc RemoveUserFromRoom (RemoveUserFromRoomRequest) returns (RemoveUserFromRoomResponse);
-        """
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CreateRoom(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def AddUserToRoom(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SendRoomMessage(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetRoomHistory(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def LeaveRoom(self, request, context):
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -80,6 +128,31 @@ def add_ChatServiceManagerServicer_to_server(servicer, server):
                     servicer.GetPrivateChatHistory,
                     request_deserializer=protos_dot_chat__pb2.GetPrivateChatHistoryRequest.FromString,
                     response_serializer=protos_dot_chat__pb2.GetPrivateChatHistoryResponse.SerializeToString,
+            ),
+            'CreateRoom': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateRoom,
+                    request_deserializer=protos_dot_chat__pb2.CreateRoomRequest.FromString,
+                    response_serializer=protos_dot_chat__pb2.CreateRoomResponse.SerializeToString,
+            ),
+            'AddUserToRoom': grpc.unary_unary_rpc_method_handler(
+                    servicer.AddUserToRoom,
+                    request_deserializer=protos_dot_chat__pb2.AddUserToRoomRequest.FromString,
+                    response_serializer=protos_dot_chat__pb2.AddUserToRoomResponse.SerializeToString,
+            ),
+            'SendRoomMessage': grpc.unary_unary_rpc_method_handler(
+                    servicer.SendRoomMessage,
+                    request_deserializer=protos_dot_chat__pb2.SendRoomMessageRequest.FromString,
+                    response_serializer=protos_dot_chat__pb2.SendRoomMessageResponse.SerializeToString,
+            ),
+            'GetRoomHistory': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetRoomHistory,
+                    request_deserializer=protos_dot_chat__pb2.GetRoomHistoryRequest.FromString,
+                    response_serializer=protos_dot_chat__pb2.GetRoomHistoryResponse.SerializeToString,
+            ),
+            'LeaveRoom': grpc.unary_unary_rpc_method_handler(
+                    servicer.LeaveRoom,
+                    request_deserializer=protos_dot_chat__pb2.LeaveRoomRequest.FromString,
+                    response_serializer=protos_dot_chat__pb2.LeaveRoomResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -136,6 +209,141 @@ class ChatServiceManager(object):
             '/ChatServiceManager/GetPrivateChatHistory',
             protos_dot_chat__pb2.GetPrivateChatHistoryRequest.SerializeToString,
             protos_dot_chat__pb2.GetPrivateChatHistoryResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def CreateRoom(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/ChatServiceManager/CreateRoom',
+            protos_dot_chat__pb2.CreateRoomRequest.SerializeToString,
+            protos_dot_chat__pb2.CreateRoomResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def AddUserToRoom(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/ChatServiceManager/AddUserToRoom',
+            protos_dot_chat__pb2.AddUserToRoomRequest.SerializeToString,
+            protos_dot_chat__pb2.AddUserToRoomResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SendRoomMessage(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/ChatServiceManager/SendRoomMessage',
+            protos_dot_chat__pb2.SendRoomMessageRequest.SerializeToString,
+            protos_dot_chat__pb2.SendRoomMessageResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetRoomHistory(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/ChatServiceManager/GetRoomHistory',
+            protos_dot_chat__pb2.GetRoomHistoryRequest.SerializeToString,
+            protos_dot_chat__pb2.GetRoomHistoryResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def LeaveRoom(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/ChatServiceManager/LeaveRoom',
+            protos_dot_chat__pb2.LeaveRoomRequest.SerializeToString,
+            protos_dot_chat__pb2.LeaveRoomResponse.FromString,
             options,
             channel_credentials,
             insecure,

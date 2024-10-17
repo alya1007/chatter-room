@@ -7,13 +7,11 @@ option csharp_namespace = "ChatService.Protos";
 service ChatServiceManager {
   rpc SendPrivateMessage (SendPrivateMessageRequest) returns (SendPrivateMessageResponse);
   rpc GetPrivateChatHistory (GetPrivateChatHistoryRequest) returns (GetPrivateChatHistoryResponse);
-  // rpc SendRoomMessage (SendRoomMessageRequest) returns (SendRoomMessageResponse);
-  // rpc GetRoomHistory (GetRoomHistoryRequest) returns (GetRoomHistoryResponse);
-  // rpc CreateRoom (CreateRoomRequest) returns (CreateRoomResponse);
-  // rpc JoinRoom (JoinRoomRequest) returns (JoinRoomResponse);
-  // rpc LeaveRoom (LeaveRoomRequest) returns (LeaveRoomResponse);
-  // rpc AddUserToRoom (AddUserToRoomRequest) returns (AddUserToRoomResponse);
-  // rpc RemoveUserFromRoom (RemoveUserFromRoomRequest) returns (RemoveUserFromRoomResponse);
+  rpc CreateRoom (CreateRoomRequest) returns (CreateRoomResponse);
+  rpc AddUserToRoom (AddUserToRoomRequest) returns (AddUserToRoomResponse);
+  rpc SendRoomMessage (SendRoomMessageRequest) returns (SendRoomMessageResponse);
+  rpc GetRoomHistory (GetRoomHistoryRequest) returns (GetRoomHistoryResponse);
+  rpc LeaveRoom (LeaveRoomRequest) returns (LeaveRoomResponse);
 }
 
 message ChatMessageProto {
@@ -22,6 +20,15 @@ message ChatMessageProto {
   string message = 3;
   google.protobuf.Timestamp created_at = 4;
   google.protobuf.Timestamp updated_at = 5;
+}
+
+message RoomMessageProto {
+  string id = 1;
+  string room_id = 2;
+  string sender_id = 3;
+  string message = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
 }
 
 message SendPrivateMessageRequest {
@@ -41,4 +48,50 @@ message GetPrivateChatHistoryRequest {
 
 message GetPrivateChatHistoryResponse {
   repeated ChatMessageProto messages = 1;
+}
+
+message CreateRoomRequest {
+  string room_name = 1;
+  string creator_id = 2;
+  repeated string members_ids = 3;
+}
+
+message CreateRoomResponse {
+  string message = 1;
+}
+
+message AddUserToRoomRequest {
+  string room_id = 1;
+  string user_id = 2;
+}
+
+message AddUserToRoomResponse {
+  string message = 1;
+}
+
+message SendRoomMessageRequest {
+  string room_id = 1;
+  string sender_id = 2;
+  string message = 3;
+}
+
+message SendRoomMessageResponse {
+  string message = 1;
+}
+
+message GetRoomHistoryRequest {
+  string room_id = 1;
+}
+
+message GetRoomHistoryResponse {
+  repeated RoomMessageProto messages = 1;
+}
+
+message LeaveRoomRequest {
+  string room_id = 1;
+  string user_id = 2;
+}
+
+message LeaveRoomResponse {
+  string message = 1;
 }

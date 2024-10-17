@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11protos/chat.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xab\x01\n\x10\x43hatMessageProto\x12\x11\n\tsender_id\x18\x01 \x01(\t\x12\x13\n\x0breceiver_id\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t\x12.\n\ncreated_at\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12.\n\nupdated_at\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"T\n\x19SendPrivateMessageRequest\x12\x11\n\tsender_id\x18\x01 \x01(\t\x12\x13\n\x0breceiver_id\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t\"-\n\x1aSendPrivateMessageResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"F\n\x1cGetPrivateChatHistoryRequest\x12\x11\n\tsender_id\x18\x01 \x01(\t\x12\x13\n\x0breceiver_id\x18\x02 \x01(\t\"D\n\x1dGetPrivateChatHistoryResponse\x12#\n\x08messages\x18\x01 \x03(\x0b\x32\x11.ChatMessageProto2\xbb\x01\n\x12\x43hatServiceManager\x12M\n\x12SendPrivateMessage\x12\x1a.SendPrivateMessageRequest\x1a\x1b.SendPrivateMessageResponse\x12V\n\x15GetPrivateChatHistory\x12\x1d.GetPrivateChatHistoryRequest\x1a\x1e.GetPrivateChatHistoryResponseB\x15\xaa\x02\x12\x43hatService.Protosb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11protos/chat.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xab\x01\n\x10\x43hatMessageProto\x12\x11\n\tsender_id\x18\x01 \x01(\t\x12\x13\n\x0breceiver_id\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t\x12.\n\ncreated_at\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12.\n\nupdated_at\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"\xb3\x01\n\x10RoomMessageProto\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0f\n\x07room_id\x18\x02 \x01(\t\x12\x11\n\tsender_id\x18\x03 \x01(\t\x12\x0f\n\x07message\x18\x04 \x01(\t\x12.\n\ncreated_at\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12.\n\nupdated_at\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"T\n\x19SendPrivateMessageRequest\x12\x11\n\tsender_id\x18\x01 \x01(\t\x12\x13\n\x0breceiver_id\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t\"-\n\x1aSendPrivateMessageResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"F\n\x1cGetPrivateChatHistoryRequest\x12\x11\n\tsender_id\x18\x01 \x01(\t\x12\x13\n\x0breceiver_id\x18\x02 \x01(\t\"D\n\x1dGetPrivateChatHistoryResponse\x12#\n\x08messages\x18\x01 \x03(\x0b\x32\x11.ChatMessageProto\"O\n\x11\x43reateRoomRequest\x12\x11\n\troom_name\x18\x01 \x01(\t\x12\x12\n\ncreator_id\x18\x02 \x01(\t\x12\x13\n\x0bmembers_ids\x18\x03 \x03(\t\"%\n\x12\x43reateRoomResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"8\n\x14\x41\x64\x64UserToRoomRequest\x12\x0f\n\x07room_id\x18\x01 \x01(\t\x12\x0f\n\x07user_id\x18\x02 \x01(\t\"(\n\x15\x41\x64\x64UserToRoomResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"M\n\x16SendRoomMessageRequest\x12\x0f\n\x07room_id\x18\x01 \x01(\t\x12\x11\n\tsender_id\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t\"*\n\x17SendRoomMessageResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"(\n\x15GetRoomHistoryRequest\x12\x0f\n\x07room_id\x18\x01 \x01(\t\"=\n\x16GetRoomHistoryResponse\x12#\n\x08messages\x18\x01 \x03(\x0b\x32\x11.RoomMessageProto\"4\n\x10LeaveRoomRequest\x12\x0f\n\x07room_id\x18\x01 \x01(\t\x12\x0f\n\x07user_id\x18\x02 \x01(\t\"$\n\x11LeaveRoomResponse\x12\x0f\n\x07message\x18\x01 \x01(\t2\xef\x03\n\x12\x43hatServiceManager\x12M\n\x12SendPrivateMessage\x12\x1a.SendPrivateMessageRequest\x1a\x1b.SendPrivateMessageResponse\x12V\n\x15GetPrivateChatHistory\x12\x1d.GetPrivateChatHistoryRequest\x1a\x1e.GetPrivateChatHistoryResponse\x12\x35\n\nCreateRoom\x12\x12.CreateRoomRequest\x1a\x13.CreateRoomResponse\x12>\n\rAddUserToRoom\x12\x15.AddUserToRoomRequest\x1a\x16.AddUserToRoomResponse\x12\x44\n\x0fSendRoomMessage\x12\x17.SendRoomMessageRequest\x1a\x18.SendRoomMessageResponse\x12\x41\n\x0eGetRoomHistory\x12\x16.GetRoomHistoryRequest\x1a\x17.GetRoomHistoryResponse\x12\x32\n\tLeaveRoom\x12\x11.LeaveRoomRequest\x1a\x12.LeaveRoomResponseB\x15\xaa\x02\x12\x43hatService.Protosb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -35,14 +35,36 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._serialized_options = b'\252\002\022ChatService.Protos'
   _globals['_CHATMESSAGEPROTO']._serialized_start=55
   _globals['_CHATMESSAGEPROTO']._serialized_end=226
-  _globals['_SENDPRIVATEMESSAGEREQUEST']._serialized_start=228
-  _globals['_SENDPRIVATEMESSAGEREQUEST']._serialized_end=312
-  _globals['_SENDPRIVATEMESSAGERESPONSE']._serialized_start=314
-  _globals['_SENDPRIVATEMESSAGERESPONSE']._serialized_end=359
-  _globals['_GETPRIVATECHATHISTORYREQUEST']._serialized_start=361
-  _globals['_GETPRIVATECHATHISTORYREQUEST']._serialized_end=431
-  _globals['_GETPRIVATECHATHISTORYRESPONSE']._serialized_start=433
-  _globals['_GETPRIVATECHATHISTORYRESPONSE']._serialized_end=501
-  _globals['_CHATSERVICEMANAGER']._serialized_start=504
-  _globals['_CHATSERVICEMANAGER']._serialized_end=691
+  _globals['_ROOMMESSAGEPROTO']._serialized_start=229
+  _globals['_ROOMMESSAGEPROTO']._serialized_end=408
+  _globals['_SENDPRIVATEMESSAGEREQUEST']._serialized_start=410
+  _globals['_SENDPRIVATEMESSAGEREQUEST']._serialized_end=494
+  _globals['_SENDPRIVATEMESSAGERESPONSE']._serialized_start=496
+  _globals['_SENDPRIVATEMESSAGERESPONSE']._serialized_end=541
+  _globals['_GETPRIVATECHATHISTORYREQUEST']._serialized_start=543
+  _globals['_GETPRIVATECHATHISTORYREQUEST']._serialized_end=613
+  _globals['_GETPRIVATECHATHISTORYRESPONSE']._serialized_start=615
+  _globals['_GETPRIVATECHATHISTORYRESPONSE']._serialized_end=683
+  _globals['_CREATEROOMREQUEST']._serialized_start=685
+  _globals['_CREATEROOMREQUEST']._serialized_end=764
+  _globals['_CREATEROOMRESPONSE']._serialized_start=766
+  _globals['_CREATEROOMRESPONSE']._serialized_end=803
+  _globals['_ADDUSERTOROOMREQUEST']._serialized_start=805
+  _globals['_ADDUSERTOROOMREQUEST']._serialized_end=861
+  _globals['_ADDUSERTOROOMRESPONSE']._serialized_start=863
+  _globals['_ADDUSERTOROOMRESPONSE']._serialized_end=903
+  _globals['_SENDROOMMESSAGEREQUEST']._serialized_start=905
+  _globals['_SENDROOMMESSAGEREQUEST']._serialized_end=982
+  _globals['_SENDROOMMESSAGERESPONSE']._serialized_start=984
+  _globals['_SENDROOMMESSAGERESPONSE']._serialized_end=1026
+  _globals['_GETROOMHISTORYREQUEST']._serialized_start=1028
+  _globals['_GETROOMHISTORYREQUEST']._serialized_end=1068
+  _globals['_GETROOMHISTORYRESPONSE']._serialized_start=1070
+  _globals['_GETROOMHISTORYRESPONSE']._serialized_end=1131
+  _globals['_LEAVEROOMREQUEST']._serialized_start=1133
+  _globals['_LEAVEROOMREQUEST']._serialized_end=1185
+  _globals['_LEAVEROOMRESPONSE']._serialized_start=1187
+  _globals['_LEAVEROOMRESPONSE']._serialized_end=1223
+  _globals['_CHATSERVICEMANAGER']._serialized_start=1226
+  _globals['_CHATSERVICEMANAGER']._serialized_end=1721
 # @@protoc_insertion_point(module_scope)
