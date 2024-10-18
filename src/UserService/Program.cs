@@ -10,6 +10,19 @@ builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnC
 string connectionString = builder.Configuration["CustomSettings:connectionString"] ?? "";
 string databaseName = builder.Configuration["CustomSettings:databaseName"] ?? "";
 
+string serviceDiscoveryAddress = builder.Configuration["Registry:serviceDiscoveryAddress"] ?? "";
+string serviceName = builder.Configuration["Registry:serviceName"] ?? "";
+
+builder.Configuration.AddJsonFile(Path.Combine(Directory.GetCurrentDirectory(), "Properties", "launchSettings.json"));
+
+string fullServiceUrl = builder.Configuration["profiles:http:applicationUrl"] ?? "";
+string pattern = @"localhost.*";
+string serviceUrl = System.Text.RegularExpressions.Regex.Match(fullServiceUrl, pattern).ToString();
+
+var serviceRegistryClient = new ServiceRegistryClient(serviceDiscoveryAddress);
+
+await serviceRegistryClient.RegisterServiceAsync(serviceName, serviceUrl);
+
 builder.Services.AddGrpc();
 
 builder.Services.AddGrpcHealthChecks().AddCheck("Sample", () => HealthCheckResult.Healthy());
@@ -21,6 +34,6 @@ var app = builder.Build();
 app.MapGrpcService<UserManagementService>();
 app.MapGrpcHealthChecksService()
     .AllowAnonymous();
-app.MapGet("/", () => "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
+app.MapGet("/", () => "This is the User Service.");
 
 app.Run();
