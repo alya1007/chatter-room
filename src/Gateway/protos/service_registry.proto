@@ -1,9 +1,12 @@
 syntax = "proto3";
 
+import "google/protobuf/empty.proto";
+
 service ServiceRegistry {
     rpc RegisterService(RegisterServiceRequest) returns (RegisterServiceResponse);
     rpc DiscoverService(DiscoverServiceRequest) returns (DiscoverServiceResponse);
     rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+    rpc StatusCheck(google.protobuf.Empty) returns (StatusCheckResponse);
 }
 
 message RegisterServiceRequest {
@@ -36,4 +39,11 @@ message HeartbeatRequest {
 message HeartbeatResponse {
     bool success = 1;
     string message = 2;
+}
+
+message StatusCheckResponse {
+    string status = 1;
+    string db_status = 2;
+    string uptime = 3;
+    string registered_services = 4;
 }

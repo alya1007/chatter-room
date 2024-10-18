@@ -207,5 +207,10 @@ def gateway_status():
     return jsonify(status), 200
 
 
+@app.route('/discovery/status', methods=['GET'])
+def discovery_status():
+    return jsonify({"status": registry_client.status()})
+
+
 if __name__ == "__main__":
     app.run(port=5000)

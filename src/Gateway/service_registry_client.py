@@ -36,3 +36,18 @@ class ServiceRegistryClient:
             return response.message
         except grpc.RpcError as e:
             raise Exception(e.details())
+
+
+    def status(self):
+        try:
+            response = self.stub.StatusCheck(service_registry_pb2.StatusCheckResponse())
+            status = {
+                "status": response.status,
+                "db_status": response.db_status,
+                "uptime": response.uptime,
+                "registered_services": response.registered_services
+            }
+
+            return status
+        except grpc.RpcError as e:
+            raise Exception(e.details())
