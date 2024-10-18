@@ -4,17 +4,19 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'protos'))
 sys.path.append(os.path.join(os.path.dirname(__file__), 'utils'))
 
 
-from dotenv import load_dotenv  # type: ignore
-import service_registry_client as src  # type: ignore
-from flask import Flask, jsonify, request
-import grpc  # type: ignore
-import user_pb2_grpc  # type: ignore
-import user_pb2  # type: ignore
-import chat_pb2_grpc  # type: ignore
-import chat_pb2  # type: ignore
-import status_codes_translator as code_t  # type: ignore
+from flask_limiter.util import get_remote_address  # type: ignore
+from flask_limiter import Limiter  # type: ignore
+import health_checker  # type: ignore
 import time
-import health_checker # type: ignore
+import status_codes_translator as code_t  # type: ignore
+import chat_pb2  # type: ignore
+import chat_pb2_grpc  # type: ignore
+import user_pb2  # type: ignore
+import user_pb2_grpc  # type: ignore
+import grpc  # type: ignore
+from flask import Flask, jsonify, request
+import service_registry_client as src  # type: ignore
+from dotenv import load_dotenv  # type: ignore
 
 
 start_time = time.time()
@@ -25,6 +27,10 @@ service_discovery_address = os.getenv('SERVICE_DISCOVERY_ADDRESS')
 
 
 app = Flask(__name__)
+
+
+limiter = Limiter(get_remote_address, app=app, default_limits=[
+                  "5 per minute"])
 
 
 registry_client = src.ServiceRegistryClient(service_discovery_address)
@@ -221,6 +227,7 @@ def user_service_status():
 @app.route('/chat-service/status', methods=['GET'])
 def chat_service_status():
     return jsonify({"status": "healthy"}) if health_checker.check_grpc_health(services["chat_service"]) else jsonify({"status": "unhealthy"})
+
 
 if __name__ == "__main__":
     app.run(port=5000)
