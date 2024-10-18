@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+option csharp_namespace = "ChatService.Protos";
+
+service ServiceRegistry {
+    rpc RegisterService(RegisterServiceRequest) returns (RegisterServiceResponse);
+    rpc GetServiceLocation(GetServiceLocationRequest) returns (GetServiceLocationResponse);
+}
+
+message RegisterServiceRequest {
+    string serviceName = 1;
+    string serviceUrl = 2;
+}
+
+message RegisterServiceResponse {
+    bool success = 1;
+}
+
+message GetServiceLocationRequest {
+    string serviceName = 1;
+}
+
+message GetServiceLocationResponse {
+    string serviceUrl = 1;
+}
