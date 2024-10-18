@@ -24,3 +24,15 @@ class ServiceRegistryClient:
             return response.service_url
         except grpc.RpcError as e:
             raise Exception(e.details())
+        
+
+    def heartbeat(self, service_url):
+        try:
+            response = self.stub.Heartbeat(
+                service_registry_pb2.HeartbeatRequest(
+                    service_url=service_url
+                )
+            )
+            return response.message
+        except grpc.RpcError as e:
+            raise Exception(e.details())

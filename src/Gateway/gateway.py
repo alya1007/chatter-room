@@ -4,17 +4,20 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'protos'))
 sys.path.append(os.path.join(os.path.dirname(__file__), 'utils'))
 
 
-import status_codes_translator as code_t  # type: ignore
-import chat_pb2  # type: ignore
-import chat_pb2_grpc  # type: ignore
-import user_pb2  # type: ignore
-import user_pb2_grpc  # type: ignore
-import grpc  # type: ignore
-from flask import Flask, jsonify, request
-
-
-import service_registry_client as src  # type: ignore
 from dotenv import load_dotenv  # type: ignore
+import service_registry_client as src  # type: ignore
+from flask import Flask, jsonify, request
+import grpc  # type: ignore
+import user_pb2_grpc  # type: ignore
+import user_pb2  # type: ignore
+import chat_pb2_grpc  # type: ignore
+import chat_pb2  # type: ignore
+import status_codes_translator as code_t  # type: ignore
+import time
+
+
+start_time = time.time()
+
 
 load_dotenv()
 service_discovery_address = os.getenv('SERVICE_DISCOVERY_ADDRESS')
@@ -25,12 +28,12 @@ app = Flask(__name__)
 
 registry_client = src.ServiceRegistryClient(service_discovery_address)
 
+
 services = {
     "user_service": registry_client.discover_service("user_service"),
     "chat_service": registry_client.discover_service("chat_service")
 }
 
-print("services: ", services)
 
 user_channel = grpc.insecure_channel(services["user_service"])
 chat_channel = grpc.insecure_channel(services["chat_service"])
@@ -107,6 +110,7 @@ def get_private_chat_history(receiver_id):
         return jsonify({"messages": messages})
     except grpc.RpcError as e:
         return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
+
 
 @app.route('/chat-service/rooms/create', methods=['POST'])
 def create_room():
@@ -187,6 +191,20 @@ def leave_room(room_id):
         return jsonify({"message": response.message})
     except grpc.RpcError as e:
         return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
+
+
+@app.route('/status', methods=['GET'])
+def gateway_status():
+    uptime = time.time() - start_time
+
+    status = {
+        "gateway": "healthy",
+        "uptime_seconds": round(uptime, 2),
+        "user_service": registry_client.heartbeat(services["user_service"]),
+        "chat_service": registry_client.heartbeat(services["chat_service"])
+    }
+
+    return jsonify(status), 200
 
 
 if __name__ == "__main__":
