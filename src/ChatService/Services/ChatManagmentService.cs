@@ -159,35 +159,36 @@ public class ChatManagementService : ChatServiceManager.ChatServiceManagerBase
         }
     }
 
-    public override async Task<SendRoomMessageResponse> SendRoomMessage(SendRoomMessageRequest request, ServerCallContext context)
+    public override Task<SendRoomMessageResponse> SendRoomMessage(SendRoomMessageRequest request, ServerCallContext context)
     {
-        try
-        {
-            if (string.IsNullOrWhiteSpace(request.SenderId) || string.IsNullOrWhiteSpace(request.RoomId) || string.IsNullOrWhiteSpace(request.Message))
-            {
-                throw new RpcException(new Status(StatusCode.InvalidArgument, "SenderId, RoomId and Message are required."));
-            }
+        // try
+        // {
+        //     if (string.IsNullOrWhiteSpace(request.SenderId) || string.IsNullOrWhiteSpace(request.RoomId) || string.IsNullOrWhiteSpace(request.Message))
+        //     {
+        //         throw new RpcException(new Status(StatusCode.InvalidArgument, "SenderId, RoomId and Message are required."));
+        //     }
 
-            var message = new RoomMessage
-            {
-                SenderId = request.SenderId,
-                RoomId = request.RoomId,
-                Message = request.Message,
-                CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now
-            };
+        //     var message = new RoomMessage
+        //     {
+        //         SenderId = request.SenderId,
+        //         RoomId = request.RoomId,
+        //         Message = request.Message,
+        //         CreatedAt = DateTime.Now,
+        //         UpdatedAt = DateTime.Now
+        //     };
 
-            await _dbContext.RoomMessages.InsertOneAsync(message);
-            return new SendRoomMessageResponse { Message = $"User {message.SenderId} sent message to room {message.RoomId}: {message.Message}" };
-        }
-        catch (RpcException)
-        {
-            throw;
-        }
-        catch (System.Exception)
-        {
-            throw new RpcException(new Status(StatusCode.Internal, "An error occurred while sending the message."));
-        }
+        //     await _dbContext.RoomMessages.InsertOneAsync(message);
+        //     return new SendRoomMessageResponse { Message = $"User {message.SenderId} sent message to room {message.RoomId}: {message.Message}" };
+        // }
+        // catch (RpcException)
+        // {
+        //     throw;
+        // }
+        // catch (System.Exception)
+        // {
+        //     throw new RpcException(new Status(StatusCode.Internal, "An error occurred while sending the message."));
+        // }
+        throw new RpcException(new Status(StatusCode.Unimplemented, "This method is not implemented yet."));
     }
 
     public override async Task<GetRoomHistoryResponse> GetRoomHistory(GetRoomHistoryRequest request, ServerCallContext context)

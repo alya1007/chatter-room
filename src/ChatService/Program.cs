@@ -1,6 +1,9 @@
 using ChatService.Services;
 using ChatService.Data;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using System.Net.WebSockets;
+using System.Text;
+using System.Threading;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +38,24 @@ builder.Services.AddSingleton<ChatServiceDbContext>(new ChatServiceDbContext(con
 builder.Services.AddSingleton<UserManagementClient>(new UserManagementClient(userServiceFullUrl));
 
 var app = builder.Build();
+
+
+app.UseWebSockets();
+WebSocketChatService.Initialize(new ChatServiceDbContext(connectionString, databaseName));
+
+app.Map("/ws/chat", async context =>
+{
+    if (context.WebSockets.IsWebSocketRequest)
+    {
+        var webSocket = await context.WebSockets.AcceptWebSocketAsync();
+        await WebSocketChatService.HandleWebSocket(context, webSocket);
+    }
+    else
+    {
+        context.Response.StatusCode = 400;
+    }
+});
+
 
 app.MapGrpcService<ChatManagementService>();
 app.MapGrpcHealthChecksService()
