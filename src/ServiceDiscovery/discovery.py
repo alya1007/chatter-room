@@ -77,20 +77,21 @@ class ServiceRegistryServicer(service_registry_pb2_grpc.ServiceRegistryServicer)
 
         healthy = check_grpc_health(service_url)
 
-        # Update the last seen time of the service
-        collection.update_one({'service_url': service_url}, {
-                              '$set': {'last_seen_at': datetime.datetime.utcnow()}})
-
-        if not healthy:
+        if healthy:
+            # Update the last seen time of the service if it's healthy
+            collection.update_one({'service_url': service_url}, {
+                '$set': {'last_seen_at': datetime.datetime.utcnow()}})
+            return service_registry_pb2.HeartbeatResponse(
+                success=True,
+                message="Heartbeat received"
+            )
+        else:
+            # Remove the service from the database if it's not healthy
+            collection.delete_one({'service_url': service_url})
             return service_registry_pb2.HeartbeatResponse(
                 success=False,
-                message="Service is not healthy"
+                message="Service is not healthy and has been removed"
             )
-
-        return service_registry_pb2.HeartbeatResponse(
-            success=True,
-            message="Heartbeat received"
-        )
 
 
 def serve():
