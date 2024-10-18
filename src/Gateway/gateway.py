@@ -13,13 +13,24 @@ import grpc  # type: ignore
 from flask import Flask, jsonify, request
 
 
+import service_registry_client as src  # type: ignore
+from dotenv import load_dotenv  # type: ignore
+
+load_dotenv()
+service_discovery_address = os.getenv('SERVICE_DISCOVERY_ADDRESS')
+
+
 app = Flask(__name__)
 
 
+registry_client = src.ServiceRegistryClient(service_discovery_address)
+
 services = {
-    "user_service": "localhost:5002",
-    "chat_service": "localhost:5001"
+    "user_service": registry_client.discover_service("user_service"),
+    "chat_service": registry_client.discover_service("chat_service")
 }
+
+print("services: ", services)
 
 user_channel = grpc.insecure_channel(services["user_service"])
 chat_channel = grpc.insecure_channel(services["chat_service"])
