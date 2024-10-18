@@ -14,6 +14,7 @@ import chat_pb2_grpc  # type: ignore
 import chat_pb2  # type: ignore
 import status_codes_translator as code_t  # type: ignore
 import time
+import health_checker # type: ignore
 
 
 start_time = time.time()
@@ -211,6 +212,15 @@ def gateway_status():
 def discovery_status():
     return jsonify({"status": registry_client.status()})
 
+
+@app.route('/user-service/status', methods=['GET'])
+def user_service_status():
+    return jsonify({"status": "healthy"}) if health_checker.check_grpc_health(services["user_service"]) else jsonify({"status": "unhealthy"})
+
+
+@app.route('/chat-service/status', methods=['GET'])
+def chat_service_status():
+    return jsonify({"status": "healthy"}) if health_checker.check_grpc_health(services["chat_service"]) else jsonify({"status": "unhealthy"})
 
 if __name__ == "__main__":
     app.run(port=5000)
