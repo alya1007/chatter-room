@@ -86,12 +86,20 @@ class ServiceRegistryServicer(service_registry_pb2_grpc.ServiceRegistryServicer)
                 message="Heartbeat received"
             )
         else:
-            # Remove the service from the database if it's not healthy
-            collection.delete_one({'service_url': service_url})
-            return service_registry_pb2.HeartbeatResponse(
-                success=False,
-                message="Service is not healthy and has been removed"
-            )
+            # search for the service in the database
+            service = collection.find_one({'service_url': service_url})
+            if not service:
+                return service_registry_pb2.HeartbeatResponse(
+                    success=False,
+                    message="Service not found"
+                )
+            else:
+                # Remove the service from the database if it's not healthy
+                collection.delete_one({'service_url': service_url})
+                return service_registry_pb2.HeartbeatResponse(
+                    success=False,
+                    message="Service is not healthy and has been removed"
+                )
 
 
 def serve():
