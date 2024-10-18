@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+option csharp_namespace = "ChatService.Protos";
+
+service UserServiceManager {
+    rpc GetUserProfile (GetUserProfileRequest) returns (GetUserProfileResponse);
+}
+
+message GetUserProfileRequest {
+    string user_id = 1;
+}
+
+message GetUserProfileResponse {
+    string username = 1;
+    string email = 2;
+}

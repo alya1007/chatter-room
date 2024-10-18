@@ -8,9 +8,11 @@ namespace ChatService.Services;
 public class ChatManagementService : ChatServiceManager.ChatServiceManagerBase
 {
     private readonly ChatServiceDbContext _dbContext;
-    public ChatManagementService(ChatServiceDbContext dbContext)
+    private readonly UserManagementClient _userManagementClient;
+    public ChatManagementService(ChatServiceDbContext dbContext, UserManagementClient userManagementClient)
     {
         _dbContext = dbContext;
+        _userManagementClient = userManagementClient;
     }
 
     public override async Task<SendPrivateMessageResponse> SendPrivateMessage(SendPrivateMessageRequest request, ServerCallContext context)
@@ -23,6 +25,9 @@ public class ChatManagementService : ChatServiceManager.ChatServiceManagerBase
             {
                 throw new RpcException(new Status(StatusCode.InvalidArgument, "All fields (SenderId, ReceiverId, Message) are required."));
             }
+
+            await _userManagementClient.GetUserProfileAsync(request.SenderId);
+            await _userManagementClient.GetUserProfileAsync(request.ReceiverId);
 
             var message = new ChatMessage
             {
@@ -93,7 +98,11 @@ public class ChatManagementService : ChatServiceManager.ChatServiceManagerBase
                 throw new RpcException(new Status(StatusCode.InvalidArgument, "RoomName, Owner and Members are required."));
             }
 
-            // TO DO: Check if the creator and members exist in the database
+            await _userManagementClient.GetUserProfileAsync(request.CreatorId);
+            foreach (var memberId in request.MembersIds)
+            {
+                await _userManagementClient.GetUserProfileAsync(memberId);
+            }
 
             var room = new ChatRoom
             {

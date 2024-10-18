@@ -11,6 +11,7 @@ string databaseName = builder.Configuration["CustomSettings:databaseName"] ?? ""
 
 string serviceDiscoveryAddress = builder.Configuration["Registry:serviceDiscoveryAddress"] ?? "";
 string serviceName = builder.Configuration["Registry:serviceName"] ?? "";
+string userServiceName = builder.Configuration["Registry:userServiceName"] ?? "";
 
 builder.Configuration.AddJsonFile(Path.Combine(Directory.GetCurrentDirectory(), "Properties", "launchSettings.json"));
 
@@ -22,11 +23,16 @@ var serviceRegistryClient = new ServiceRegistryClient(serviceDiscoveryAddress);
 
 await serviceRegistryClient.RegisterServiceAsync(serviceName, serviceUrl);
 
+string userServiceUrl = await serviceRegistryClient.DiscoverServiceAsync(userServiceName);
+string userServiceFullUrl = "http://" + userServiceUrl;
+
 builder.Services.AddGrpc();
 
 builder.Services.AddGrpcHealthChecks().AddCheck("Sample", () => HealthCheckResult.Healthy());
 
 builder.Services.AddSingleton<ChatServiceDbContext>(new ChatServiceDbContext(connectionString, databaseName));
+
+builder.Services.AddSingleton<UserManagementClient>(new UserManagementClient(userServiceFullUrl));
 
 var app = builder.Build();
 
