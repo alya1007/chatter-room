@@ -31,17 +31,20 @@ public class ServiceRegistryClient
         }
     }
 
-    public async Task<string> GetServiceLocationAsync(string serviceName)
+    public async Task<string> DiscoverServiceAsync(string serviceName)
     {
-        try 
+        try
         {
-            var request = new GetServiceLocationRequest { ServiceName = serviceName };
-            var response = await _client.GetServiceLocationAsync(request);
+            var request = new DiscoverServiceRequest
+            {
+                ServiceName = serviceName
+            };
+            var response = await _client.DiscoverServiceAsync(request);
             return response.ServiceUrl;
         }
         catch (RpcException e)
         {
-            throw new Exception($"Failed to get service location for service {serviceName}. {e.Message}");
+            throw new Exception($"Failed to discover service {serviceName}. {e.Message}");
         }
     }
 
