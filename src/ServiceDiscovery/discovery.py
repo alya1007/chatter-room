@@ -51,19 +51,19 @@ class ServiceRegistryServicer(service_registry_pb2_grpc.ServiceRegistryServicer)
 
         # Find all instances of the service
         services_cursor = collection.find({'service_name': service_name})
-        services = []
+        services_urls = []
 
         for service in services_cursor:
-            services.append(service_registry_pb2.Service(
-                service_url=service['service_url'],
-                # Convert to string for gRPC
-                last_seen_at=service['last_seen_at'].isoformat()
-            ))
+            services_urls.append(service['service_url'])
 
-        if not services:
+        if not services_urls:
             return service_registry_pb2.DiscoverServiceResponse()
-
-        return service_registry_pb2.DiscoverServiceResponse(services=services)
+        
+        # TO DO: Implement load balancing
+        # for now, return the first service found
+        return service_registry_pb2.DiscoverServiceResponse(
+            service_url=services_urls[0]
+        )
 
     # Update service heartbeat
     def Heartbeat(self, request, context):

@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1dprotos/service_registry.proto\"C\n\x16RegisterServiceRequest\x12\x14\n\x0cservice_name\x18\x01 \x01(\t\x12\x13\n\x0bservice_url\x18\x02 \x01(\t\";\n\x17RegisterServiceResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\".\n\x16\x44iscoverServiceRequest\x12\x14\n\x0cservice_name\x18\x01 \x01(\t\"5\n\x17\x44iscoverServiceResponse\x12\x1a\n\x08services\x18\x01 \x03(\x0b\x32\x08.Service\"4\n\x07Service\x12\x13\n\x0bservice_url\x18\x01 \x01(\t\x12\x14\n\x0clast_seen_at\x18\x02 \x01(\t\"\'\n\x10HeartbeatRequest\x12\x13\n\x0bservice_url\x18\x01 \x01(\t\"5\n\x11HeartbeatResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t2\xd1\x01\n\x0fServiceRegistry\x12\x44\n\x0fRegisterService\x12\x17.RegisterServiceRequest\x1a\x18.RegisterServiceResponse\x12\x44\n\x0f\x44iscoverService\x12\x17.DiscoverServiceRequest\x1a\x18.DiscoverServiceResponse\x12\x32\n\tHeartbeat\x12\x11.HeartbeatRequest\x1a\x12.HeartbeatResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1dprotos/service_registry.proto\"C\n\x16RegisterServiceRequest\x12\x14\n\x0cservice_name\x18\x01 \x01(\t\x12\x13\n\x0bservice_url\x18\x02 \x01(\t\";\n\x17RegisterServiceResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\".\n\x16\x44iscoverServiceRequest\x12\x14\n\x0cservice_name\x18\x01 \x01(\t\".\n\x17\x44iscoverServiceResponse\x12\x13\n\x0bservice_url\x18\x01 \x01(\t\"4\n\x07Service\x12\x13\n\x0bservice_url\x18\x01 \x01(\t\x12\x14\n\x0clast_seen_at\x18\x02 \x01(\t\"\'\n\x10HeartbeatRequest\x12\x13\n\x0bservice_url\x18\x01 \x01(\t\"5\n\x11HeartbeatResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t2\xd1\x01\n\x0fServiceRegistry\x12\x44\n\x0fRegisterService\x12\x17.RegisterServiceRequest\x1a\x18.RegisterServiceResponse\x12\x44\n\x0f\x44iscoverService\x12\x17.DiscoverServiceRequest\x1a\x18.DiscoverServiceResponse\x12\x32\n\tHeartbeat\x12\x11.HeartbeatRequest\x1a\x12.HeartbeatResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -38,13 +38,13 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_DISCOVERSERVICEREQUEST']._serialized_start=163
   _globals['_DISCOVERSERVICEREQUEST']._serialized_end=209
   _globals['_DISCOVERSERVICERESPONSE']._serialized_start=211
-  _globals['_DISCOVERSERVICERESPONSE']._serialized_end=264
-  _globals['_SERVICE']._serialized_start=266
-  _globals['_SERVICE']._serialized_end=318
-  _globals['_HEARTBEATREQUEST']._serialized_start=320
-  _globals['_HEARTBEATREQUEST']._serialized_end=359
-  _globals['_HEARTBEATRESPONSE']._serialized_start=361
-  _globals['_HEARTBEATRESPONSE']._serialized_end=414
-  _globals['_SERVICEREGISTRY']._serialized_start=417
-  _globals['_SERVICEREGISTRY']._serialized_end=626
+  _globals['_DISCOVERSERVICERESPONSE']._serialized_end=257
+  _globals['_SERVICE']._serialized_start=259
+  _globals['_SERVICE']._serialized_end=311
+  _globals['_HEARTBEATREQUEST']._serialized_start=313
+  _globals['_HEARTBEATREQUEST']._serialized_end=352
+  _globals['_HEARTBEATRESPONSE']._serialized_start=354
+  _globals['_HEARTBEATRESPONSE']._serialized_end=407
+  _globals['_SERVICEREGISTRY']._serialized_start=410
+  _globals['_SERVICEREGISTRY']._serialized_end=619
 # @@protoc_insertion_point(module_scope)
