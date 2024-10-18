@@ -17,6 +17,8 @@ import grpc  # type: ignore
 from flask import Flask, jsonify, request
 import service_registry_client as src  # type: ignore
 from dotenv import load_dotenv  # type: ignore
+import redis # type: ignore
+import json
 
 
 start_time = time.time()
@@ -24,6 +26,7 @@ start_time = time.time()
 
 load_dotenv()
 service_discovery_address = os.getenv('SERVICE_DISCOVERY_ADDRESS')
+redis_client = redis.StrictRedis(host=os.getenv('REDIS_HOST'), port=os.getenv('REDIS_PORT'), db=0, decode_responses=True)
 
 
 app = Flask(__name__)
@@ -74,16 +77,24 @@ def login_user():
         return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
 
 
-@app.route('/user-service/user/<user_id>', methods=['GET'])
+@app.route('/user-service/users/<user_id>', methods=['GET'])
 def get_user_profile(user_id):
+    cache_key = f"user_profile:{user_id}"
+
+    cached_profile = redis_client.get(cache_key)
+    if cached_profile:
+        return json.loads(cached_profile)
+
     try:
         response = user_service_stub.GetUserProfile(user_pb2.GetUserProfileRequest(
             user_id=user_id
         ), timeout=5.0)
-        return jsonify({
+        user_profile = {
             "username": response.username,
             "email": response.email
-        })
+        }
+        redis_client.setex(cache_key, 60, json.dumps(user_profile))
+        return jsonify(user_profile)
     except grpc.RpcError as e:
         return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
 
