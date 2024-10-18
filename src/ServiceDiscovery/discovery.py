@@ -32,13 +32,6 @@ class ServiceRegistryServicer(service_registry_pb2_grpc.ServiceRegistryServicer)
                 message="service_name and service_url are required"
             )
 
-        existing_url = collection.find_one({'service_url': service_url})
-        if existing_url:
-            return service_registry_pb2.RegisterServiceResponse(
-                success=False,
-                message="Service URL already exists"
-            )
-
         # Insert the new service if it does not already exist
         collection.insert_one({
             'service_name': service_name,
