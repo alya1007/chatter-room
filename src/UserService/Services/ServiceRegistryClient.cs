@@ -22,26 +22,33 @@ public class ServiceRegistryClient
     {
         try
         {
-            var request = new RegisterServiceRequest { ServiceName = serviceName, ServiceUrl = serviceUrl };
+            var request = new RegisterServiceRequest
+            {
+                ServiceName = serviceName,
+                ServiceUrl = serviceUrl
+            };
             await _client.RegisterServiceAsync(request);
         }
         catch (RpcException e)
         {
-            throw new Exception($"Failed to register service {serviceName} with URL {serviceUrl}. {e.Message}");
+            throw new Exception($"Failed to register service {serviceName}. {e.Message}");
         }
     }
 
-    public async Task<string> GetServiceLocationAsync(string serviceName)
+    public async Task<string> DiscoverServiceAsync(string serviceName)
     {
-        try 
+        try
         {
-            var request = new GetServiceLocationRequest { ServiceName = serviceName };
-            var response = await _client.GetServiceLocationAsync(request);
+            var request = new DiscoverServiceRequest
+            {
+                ServiceName = serviceName
+            };
+            var response = await _client.DiscoverServiceAsync(request);
             return response.ServiceUrl;
         }
         catch (RpcException e)
         {
-            throw new Exception($"Failed to get service location for service {serviceName}. {e.Message}");
+            throw new Exception($"Failed to discover service {serviceName}. {e.Message}");
         }
     }
 
