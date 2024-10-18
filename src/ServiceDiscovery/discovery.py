@@ -11,6 +11,7 @@ import service_registry_pb2  # type: ignore
 import service_registry_pb2_grpc  # type: ignore
 from dotenv import load_dotenv  # type: ignore
 from health_checker import check_grpc_health
+import time
 
 # MongoDB setup
 load_dotenv()
@@ -18,6 +19,9 @@ mongo_uri = os.getenv('CONNECTION_STRING')
 client = MongoClient(mongo_uri)
 db = client[os.getenv('DB_NAME')]
 collection = db[os.getenv('COLLECTION_NAME')]
+
+
+start_time = time.time()
 
 
 class ServiceRegistryServicer(service_registry_pb2_grpc.ServiceRegistryServicer):
@@ -100,6 +104,22 @@ class ServiceRegistryServicer(service_registry_pb2_grpc.ServiceRegistryServicer)
                     success=False,
                     message="Service is not healthy and has been removed"
                 )
+
+
+    def StatusCheck(self, request, context):
+        # check the status of database connection
+        db_response = client.server_info()
+        db_status = "Connected" if db_response else "Not connected"
+
+        # check number of services registered
+        services_count = collection.count_documents({})
+
+        return service_registry_pb2.StatusCheckResponse(
+            status="Service registry is running",
+            db_status=db_status,
+            uptime=str(round(time.time() - start_time, 2)),
+            registered_services=str(services_count)
+        )
 
 
 def serve():
