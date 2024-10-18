@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+service ServiceRegistry {
+    rpc RegisterService(RegisterServiceRequest) returns (RegisterServiceResponse);
+    rpc DiscoverService(DiscoverServiceRequest) returns (DiscoverServiceResponse);
+    rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+}
+
+message RegisterServiceRequest {
+    string service_name = 1;
+    string service_url = 2;
+}
+
+message RegisterServiceResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message DiscoverServiceRequest {
+    string service_name = 1;
+}
+
+message DiscoverServiceResponse {
+    repeated Service services = 1;
+}
+
+message Service {
+    string service_url = 1;
+    string last_seen_at = 2;
+}
+
+message HeartbeatRequest {
+    string service_url = 1;
+}
+
+message HeartbeatResponse {
+    bool success = 1;
+    string message = 2;
+}
