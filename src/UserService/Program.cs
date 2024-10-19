@@ -30,6 +30,25 @@ builder.Services.AddSingleton<UserServiceDbContext>(new UserServiceDbContext(con
 
 var app = builder.Build();
 
+app.UseWebSockets();
+
+WebSocketUserService.Initialize();
+
+app.Map("/ws/alert", async context =>
+{
+    if (context.WebSockets.IsWebSocketRequest)
+    {
+        Console.WriteLine("WebSocket request received");
+        var webSocket = await context.WebSockets.AcceptWebSocketAsync();
+        await WebSocketUserService.HandleWebSocket(context, webSocket);
+    }
+    else
+    {
+        Console.WriteLine("Not a WebSocket request");
+        context.Response.StatusCode = 410;
+    }
+});
+
 app.MapGrpcService<UserManagementService>();
 app.MapGrpcHealthChecksService()
     .AllowAnonymous();

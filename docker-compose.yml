@@ -23,7 +23,8 @@ services:
       context: ./src/UserService
     container_name: user-service
     ports:
-      - "5002:5002"  # Fixing the port to 5002:5002
+      - "5002:5002"
+      - "5007:5007"
     depends_on:
       - redis
       - service-discovery
@@ -37,7 +38,7 @@ services:
       context: ./src/ChatService
     container_name: chat-service
     ports:
-      - "5001:5001"  # Fixing the port to 5001:5001
+      - "5001:5001"
     depends_on:
       - service-discovery
       - user-service
@@ -51,7 +52,7 @@ services:
       context: ./src/Gateway
     container_name: gateway
     ports:
-      - "5000:5000"  # Gateway exposed on port 5000
+      - "5000:5000"
     depends_on:
       - service-discovery
       - user-service

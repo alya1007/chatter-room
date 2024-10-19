@@ -15,8 +15,9 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app/out .
 
-# Expose the port
+# Expose the ports for WebSocket (HTTP/1.1) and gRPC (HTTP/2)
 EXPOSE 5002
+EXPOSE 5007
 
 # Start the service
 ENTRYPOINT ["dotnet", "UserService.dll"]

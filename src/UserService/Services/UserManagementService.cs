@@ -73,6 +73,8 @@ public class UserManagementService : UserServiceManager.UserServiceManagerBase
 
             string token = JwtGenerator.GenerateJwt(user.Email, user.Username, user.Id!);
 
+            await WebSocketUserService.SendNotification(user.Id!, "A new device has logged in to your account.");
+
             return new LoginUserResponse { Token = token };
         }
         catch (RpcException)
