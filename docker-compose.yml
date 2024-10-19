@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  service-discovery:
+    build:
+      context: ./src/ServiceDiscovery
+    container_name: service-discovery
+    ports:
+      - "5003:5003"
+    networks:
+      - app-network
+    env_file: ./src/ServiceDiscovery/.env
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+
+  user-service:
+    build:
+      context: ./src/UserService
+    container_name: user-service
+    ports:
+      - "5002:5002"  # Fixing the port to 5002:5002
+    depends_on:
+      - redis
+      - service-discovery
+    networks:
+      - app-network
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+
+  chat-service:
+    build:
+      context: ./src/ChatService
+    container_name: chat-service
+    ports:
+      - "5001:5001"  # Fixing the port to 5001:5001
+    depends_on:
+      - service-discovery
+      - user-service
+    networks:
+      - app-network
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+
+  gateway:
+    build:
+      context: ./src/Gateway
+    container_name: gateway
+    ports:
+      - "5000:5000"  # Gateway exposed on port 5000
+    depends_on:
+      - service-discovery
+      - user-service
+      - chat-service
+    networks:
+      - app-network
+    env_file: ./src/Gateway/.env
+
+networks:
+  app-network:
+    driver: bridge
