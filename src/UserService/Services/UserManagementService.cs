@@ -106,9 +106,9 @@ public class UserManagementService : UserServiceManager.UserServiceManagerBase
         {
             throw;
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            throw new RpcException(new Status(StatusCode.Internal, "An error occurred while fetching user profile"));
+            throw new RpcException(new Status(StatusCode.Internal, $"An error occurred while fetching user profile: {e.Message}"));
         }
     }
 }

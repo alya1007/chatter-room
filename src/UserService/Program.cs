@@ -1,6 +1,9 @@
 using UserService.Services;
 using UserService.Data;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using System.Net.WebSockets;
+using System.Text;
+using System.Threading;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,13 +16,9 @@ string databaseName = builder.Configuration["CustomSettings:databaseName"] ?? ""
 string serviceDiscoveryAddress = builder.Configuration["Registry:serviceDiscoveryAddress"] ?? "";
 string serviceName = builder.Configuration["Registry:serviceName"] ?? "";
 
-builder.Configuration.AddJsonFile(Path.Combine(Directory.GetCurrentDirectory(), "Properties", "launchSettings.json"));
-
-string fullServiceUrl = builder.Configuration["profiles:http:applicationUrl"] ?? "";
-string pattern = @"localhost.*";
-string serviceUrl = System.Text.RegularExpressions.Regex.Match(fullServiceUrl, pattern).ToString();
-
 var serviceRegistryClient = new ServiceRegistryClient(serviceDiscoveryAddress);
+
+var serviceUrl = $"user-service:{builder.Configuration["Registry:port"]}";
 
 await serviceRegistryClient.RegisterServiceAsync(serviceName, serviceUrl);
 
