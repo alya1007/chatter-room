@@ -16,18 +16,14 @@ string serviceDiscoveryAddress = builder.Configuration["Registry:serviceDiscover
 string serviceName = builder.Configuration["Registry:serviceName"] ?? "";
 string userServiceName = builder.Configuration["Registry:userServiceName"] ?? "";
 
-builder.Configuration.AddJsonFile(Path.Combine(Directory.GetCurrentDirectory(), "Properties", "launchSettings.json"));
-
-string fullServiceUrl = builder.Configuration["profiles:http:applicationUrl"] ?? "";
-string pattern = @"localhost.*";
-string serviceUrl = System.Text.RegularExpressions.Regex.Match(fullServiceUrl, pattern).ToString();
-
 var serviceRegistryClient = new ServiceRegistryClient(serviceDiscoveryAddress);
+
+var serviceUrl = $"chat-service:{builder.Configuration["Registry:port"]}";
 
 await serviceRegistryClient.RegisterServiceAsync(serviceName, serviceUrl);
 
 string userServiceUrl = await serviceRegistryClient.DiscoverServiceAsync(userServiceName);
-string userServiceFullUrl = "http://" + userServiceUrl;
+string userServiceFullUrl = $"http://{userServiceUrl}";
 
 builder.Services.AddGrpc();
 

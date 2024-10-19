@@ -3,6 +3,7 @@ using ChatService.Protos;
 using ChatService.Models;
 using ChatService.Data;
 using MongoDB.Driver;
+using System.Threading;
 
 namespace ChatService.Services;
 public class ChatManagementService : ChatServiceManager.ChatServiceManagerBase
@@ -19,6 +20,8 @@ public class ChatManagementService : ChatServiceManager.ChatServiceManagerBase
     {
         try
         {
+            // Sleep for 6 seconds
+            Thread.Sleep(6000);
             if (string.IsNullOrWhiteSpace(request.SenderId) ||
                 string.IsNullOrWhiteSpace(request.ReceiverId) ||
                 string.IsNullOrWhiteSpace(request.Message))
@@ -120,9 +123,9 @@ public class ChatManagementService : ChatServiceManager.ChatServiceManagerBase
         {
             throw;
         }
-        catch (System.Exception)
+        catch (System.Exception e)
         {
-            throw new RpcException(new Status(StatusCode.Internal, "An error occurred while creating the room."));
+            throw new RpcException(new Status(StatusCode.Internal, $"An error occurred while creating the room: {e.Message}"));
         }
     }
 

@@ -14,4 +14,6 @@ public class ChatServiceDbContext
     public IMongoCollection<ChatMessage> PrivateMessages => _database.GetCollection<ChatMessage>("private_messages");
     public IMongoCollection<ChatRoom> ChatRooms => _database.GetCollection<ChatRoom>("rooms");
     public IMongoCollection<RoomMessage> RoomMessages => _database.GetCollection<RoomMessage>("room_messages");
+
+    // TO DO: move from cloud to local
 }
