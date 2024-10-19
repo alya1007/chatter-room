@@ -25,7 +25,7 @@ start_time = time.time()
 
 
 load_dotenv()
-service_discovery_address = os.getenv('SERVICE_DISCOVERY_ADDRESS')
+service_discovery_address = 'http://service-discovery:5003'
 redis_client = redis.StrictRedis(host=os.getenv('REDIS_HOST'), port=os.getenv('REDIS_PORT'), db=0, decode_responses=True)
 
 
@@ -35,15 +35,24 @@ app = Flask(__name__)
 limiter = Limiter(get_remote_address, app=app, default_limits=[
                   "5 per minute"])
 
+service_discovery_port = service_discovery_address.split(":")[-1]
 
-registry_client = src.ServiceRegistryClient(service_discovery_address)
 
+registry_client = src.ServiceRegistryClient("service-discovery:" + service_discovery_port)
+
+user_service_full_address = registry_client.discover_service("user_service")
+chat_service_full_address = registry_client.discover_service("chat_service")
+
+user_service_port = user_service_full_address.split(":")[-1]
+chat_service_port = chat_service_full_address.split(":")[-1]
 
 services = {
-    "user_service": registry_client.discover_service("user_service"),
-    "chat_service": registry_client.discover_service("chat_service")
+    "user_service": "user-service:5002",
+    "chat_service": "chat-service:" + chat_service_port
 }
 
+print("user service address: ", services["user_service"])
+print("chat service address: ", services["chat_service"])
 
 user_channel = grpc.insecure_channel(services["user_service"])
 chat_channel = grpc.insecure_channel(services["chat_service"])
@@ -241,4 +250,4 @@ def chat_service_status():
 
 
 if __name__ == "__main__":
-    app.run(port=5000)
+    app.run(host="0.0.0.0", port=5000)
