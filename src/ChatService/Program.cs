@@ -37,21 +37,23 @@ var app = builder.Build();
 
 
 app.UseWebSockets();
+
 WebSocketChatService.Initialize(new ChatServiceDbContext(connectionString, databaseName));
 
 app.Map("/ws/chat", async context =>
 {
     if (context.WebSockets.IsWebSocketRequest)
     {
+        Console.WriteLine("WebSocket request received");
         var webSocket = await context.WebSockets.AcceptWebSocketAsync();
         await WebSocketChatService.HandleWebSocket(context, webSocket);
     }
     else
     {
-        context.Response.StatusCode = 400;
+        Console.WriteLine("Not a WebSocket request");
+        context.Response.StatusCode = 410;
     }
 });
-
 
 app.MapGrpcService<ChatManagementService>();
 app.MapGrpcHealthChecksService()
