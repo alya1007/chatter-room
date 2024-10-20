@@ -17,6 +17,7 @@ COPY --from=build /app/out .
 
 # Expose the port
 EXPOSE 5001
+EXPOSE 5008
 
 # Start the service
 ENTRYPOINT ["dotnet", "ChatService.dll"]

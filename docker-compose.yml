@@ -39,6 +39,7 @@ services:
     container_name: chat-service
     ports:
       - "5001:5001"
+      - "5008:5008"
     depends_on:
       - service-discovery
       - user-service
