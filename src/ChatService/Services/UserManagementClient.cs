@@ -27,7 +27,7 @@ public class UserManagementClient
         }
         catch (RpcException e)
         {
-            throw new Exception($"Failed to get user profile for user {userId}. {e.Message}");
+            throw new RpcException(new Status(StatusCode.NotFound, $"User {userId} not found"));
         }
     }
 
