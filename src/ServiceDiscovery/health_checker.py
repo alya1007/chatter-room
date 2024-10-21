@@ -1,5 +1,6 @@
-import grpc # type: ignore
-from grpc_health.v1 import health_pb2, health_pb2_grpc # type: ignore
+import grpc  # type: ignore
+from grpc_health.v1 import health_pb2, health_pb2_grpc  # type: ignore
+
 
 def check_grpc_health(service_address: str):
     with grpc.insecure_channel(service_address) as channel:

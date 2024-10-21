@@ -20,8 +20,6 @@ public class ChatManagementService : ChatServiceManager.ChatServiceManagerBase
     {
         try
         {
-            // Sleep for 6 seconds
-            Thread.Sleep(6000);
             if (string.IsNullOrWhiteSpace(request.SenderId) ||
                 string.IsNullOrWhiteSpace(request.ReceiverId) ||
                 string.IsNullOrWhiteSpace(request.Message))
@@ -160,38 +158,6 @@ public class ChatManagementService : ChatServiceManager.ChatServiceManagerBase
         {
             throw new RpcException(new Status(StatusCode.Internal, "An error occurred while adding the user to the room."));
         }
-    }
-
-    public override Task<SendRoomMessageResponse> SendRoomMessage(SendRoomMessageRequest request, ServerCallContext context)
-    {
-        // try
-        // {
-        //     if (string.IsNullOrWhiteSpace(request.SenderId) || string.IsNullOrWhiteSpace(request.RoomId) || string.IsNullOrWhiteSpace(request.Message))
-        //     {
-        //         throw new RpcException(new Status(StatusCode.InvalidArgument, "SenderId, RoomId and Message are required."));
-        //     }
-
-        //     var message = new RoomMessage
-        //     {
-        //         SenderId = request.SenderId,
-        //         RoomId = request.RoomId,
-        //         Message = request.Message,
-        //         CreatedAt = DateTime.Now,
-        //         UpdatedAt = DateTime.Now
-        //     };
-
-        //     await _dbContext.RoomMessages.InsertOneAsync(message);
-        //     return new SendRoomMessageResponse { Message = $"User {message.SenderId} sent message to room {message.RoomId}: {message.Message}" };
-        // }
-        // catch (RpcException)
-        // {
-        //     throw;
-        // }
-        // catch (System.Exception)
-        // {
-        //     throw new RpcException(new Status(StatusCode.Internal, "An error occurred while sending the message."));
-        // }
-        throw new RpcException(new Status(StatusCode.Unimplemented, "This method is not implemented yet."));
     }
 
     public override async Task<GetRoomHistoryResponse> GetRoomHistory(GetRoomHistoryRequest request, ServerCallContext context)

@@ -1,11 +1,6 @@
 import grpc  # type: ignore
-import sys
-import os
-
-
-sys.path.append(os.path.join(os.path.dirname(__file__), 'protos'))
-import service_registry_pb2_grpc  # type: ignore
-import service_registry_pb2  # type: ignore
+import protos.service_registry_pb2 as service_registry_pb2  # type: ignore
+import protos.service_registry_pb2_grpc as service_registry_pb2_grpc  # type: ignore
 
 
 class ServiceRegistryClient:
@@ -24,7 +19,6 @@ class ServiceRegistryClient:
             return response.service_url
         except grpc.RpcError as e:
             raise Exception(e.details())
-        
 
     def heartbeat(self, service_url):
         try:
@@ -37,10 +31,10 @@ class ServiceRegistryClient:
         except grpc.RpcError as e:
             raise Exception(e.details())
 
-
     def status(self):
         try:
-            response = self.stub.StatusCheck(service_registry_pb2.StatusCheckResponse())
+            response = self.stub.StatusCheck(
+                service_registry_pb2.StatusCheckResponse())
             status = {
                 "status": response.status,
                 "db_status": response.db_status,

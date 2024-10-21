@@ -1,24 +1,19 @@
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), 'protos'))
-sys.path.append(os.path.join(os.path.dirname(__file__), 'utils'))
-
-
-from flask_limiter.util import get_remote_address  # type: ignore
-from flask_limiter import Limiter  # type: ignore
-import health_checker  # type: ignore
-import time
-import status_codes_translator as code_t  # type: ignore
-import chat_pb2  # type: ignore
-import chat_pb2_grpc  # type: ignore
-import user_pb2  # type: ignore
-import user_pb2_grpc  # type: ignore
-import grpc  # type: ignore
-from flask import Flask, jsonify, request
-import service_registry_client as src  # type: ignore
-from dotenv import load_dotenv  # type: ignore
-import redis # type: ignore
 import json
+import redis  # type: ignore
+from dotenv import load_dotenv  # type: ignore
+import service_registry_client as src  # type: ignore
+from flask import Flask, jsonify, request
+import grpc  # type: ignore
+import protos.user_pb2_grpc as user_pb2_grpc  # type: ignore
+import protos.user_pb2 as user_pb2  # type: ignore
+import protos.chat_pb2_grpc as chat_pb2_grpc  # type: ignore
+import protos.chat_pb2 as chat_pb2  # type: ignore
+import utils.status_codes_translator as code_t  # type: ignore
+import time
+import utils.health_checker as health_checker  # type: ignore
+from flask_limiter import Limiter  # type: ignore
+from flask_limiter.util import get_remote_address  # type: ignore
+import os
 
 
 start_time = time.time()
@@ -26,7 +21,8 @@ start_time = time.time()
 
 load_dotenv()
 service_discovery_address = 'http://service-discovery:5003'
-redis_client = redis.StrictRedis(host=os.getenv('REDIS_HOST'), port=os.getenv('REDIS_PORT'), db=0, decode_responses=True)
+redis_client = redis.StrictRedis(host=os.getenv(
+    'REDIS_HOST'), port=os.getenv('REDIS_PORT'), db=0, decode_responses=True)
 
 
 app = Flask(__name__)
@@ -38,7 +34,8 @@ limiter = Limiter(get_remote_address, app=app, default_limits=[
 service_discovery_port = service_discovery_address.split(":")[-1]
 
 
-registry_client = src.ServiceRegistryClient("service-discovery:" + service_discovery_port)
+registry_client = src.ServiceRegistryClient(
+    "service-discovery:" + service_discovery_port)
 
 user_service_full_address = registry_client.discover_service("user_service")
 chat_service_full_address = registry_client.discover_service("chat_service")
@@ -168,21 +165,6 @@ def add_room_member(room_id):
         return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
 
 
-@app.route('/chat-service/rooms/<room_id>/send', methods=['POST'])
-def send_room_message(room_id):
-    data = request.get_json()
-    try:
-        response = chat_service_stub.SendRoomMessage(
-            chat_pb2.SendRoomMessageRequest(
-                room_id=room_id,
-                sender_id=data["sender_id"],
-                message=data["message"]
-            ), timeout=5.0)
-        return jsonify({"message": response.message})
-    except grpc.RpcError as e:
-        return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
-
-
 @app.route('/chat-service/rooms/<room_id>', methods=['GET'])
 def get_room_chat_history(room_id):
     try:
@@ -247,6 +229,15 @@ def user_service_status():
 @app.route('/chat-service/status', methods=['GET'])
 def chat_service_status():
     return jsonify({"status": "healthy"}) if health_checker.check_grpc_health(services["chat_service"]) else jsonify({"status": "unhealthy"})
+
+
+@app.route('/timeout', methods=['GET'])
+def timeout():
+    empty = user_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
+    try:
+        user_service_stub.Timeout(empty, timeout=5.0)
+    except grpc.RpcError as e:
+        return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
 
 
 if __name__ == "__main__":

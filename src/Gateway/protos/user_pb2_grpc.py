@@ -3,6 +3,7 @@
 import grpc
 import warnings
 
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 from protos import user_pb2 as protos_dot_user__pb2
 
 GRPC_GENERATED_VERSION = '1.67.0'
@@ -49,6 +50,11 @@ class UserServiceManagerStub(object):
                 request_serializer=protos_dot_user__pb2.GetUserProfileRequest.SerializeToString,
                 response_deserializer=protos_dot_user__pb2.GetUserProfileResponse.FromString,
                 _registered_method=True)
+        self.Timeout = channel.unary_unary(
+                '/UserServiceManager/Timeout',
+                request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
 
 
 class UserServiceManagerServicer(object):
@@ -72,6 +78,12 @@ class UserServiceManagerServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def Timeout(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_UserServiceManagerServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -89,6 +101,11 @@ def add_UserServiceManagerServicer_to_server(servicer, server):
                     servicer.GetUserProfile,
                     request_deserializer=protos_dot_user__pb2.GetUserProfileRequest.FromString,
                     response_serializer=protos_dot_user__pb2.GetUserProfileResponse.SerializeToString,
+            ),
+            'Timeout': grpc.unary_unary_rpc_method_handler(
+                    servicer.Timeout,
+                    request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -172,6 +189,33 @@ class UserServiceManager(object):
             '/UserServiceManager/GetUserProfile',
             protos_dot_user__pb2.GetUserProfileRequest.SerializeToString,
             protos_dot_user__pb2.GetUserProfileResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def Timeout(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/UserServiceManager/Timeout',
+            google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
             channel_credentials,
             insecure,

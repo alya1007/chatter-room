@@ -4,6 +4,7 @@ using UserService.Data;
 using UserService.Protos;
 using UserService.Models;
 using UserService.Utils;
+using Google.Protobuf.WellKnownTypes;
 
 namespace UserService.Services;
 public class UserManagementService : UserServiceManager.UserServiceManagerBase
@@ -112,5 +113,11 @@ public class UserManagementService : UserServiceManager.UserServiceManagerBase
         {
             throw new RpcException(new Status(StatusCode.Internal, $"An error occurred while fetching user profile: {e.Message}"));
         }
+    }
+
+    public override Task<Empty> Timeout(Empty request, ServerCallContext context)
+    {
+        Task.Delay(10000).Wait();
+        return Task.FromResult(new Empty());
     }
 }

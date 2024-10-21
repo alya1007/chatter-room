@@ -9,7 +9,6 @@ service ChatServiceManager {
   rpc GetPrivateChatHistory (GetPrivateChatHistoryRequest) returns (GetPrivateChatHistoryResponse);
   rpc CreateRoom (CreateRoomRequest) returns (CreateRoomResponse);
   rpc AddUserToRoom (AddUserToRoomRequest) returns (AddUserToRoomResponse);
-  rpc SendRoomMessage (SendRoomMessageRequest) returns (SendRoomMessageResponse);
   rpc GetRoomHistory (GetRoomHistoryRequest) returns (GetRoomHistoryResponse);
   rpc LeaveRoom (LeaveRoomRequest) returns (LeaveRoomResponse);
 }
@@ -66,16 +65,6 @@ message AddUserToRoomRequest {
 }
 
 message AddUserToRoomResponse {
-  string message = 1;
-}
-
-message SendRoomMessageRequest {
-  string room_id = 1;
-  string sender_id = 2;
-  string message = 3;
-}
-
-message SendRoomMessageResponse {
   string message = 1;
 }
 

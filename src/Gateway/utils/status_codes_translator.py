@@ -1,4 +1,4 @@
-import grpc # type: ignore
+import grpc  # type: ignore
 
 
 grpc_to_http_status_codes = {
@@ -15,5 +15,3 @@ grpc_to_http_status_codes = {
 
 def grpc_status_to_http(status: grpc.StatusCode) -> int:
     return grpc_to_http_status_codes.get(status, 500)
-
-

@@ -1,14 +1,10 @@
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), 'protos'))
-
 import grpc  # type: ignore
 from concurrent import futures
 import datetime
 from pymongo import MongoClient  # type: ignore
 import os
-import service_registry_pb2  # type: ignore
-import service_registry_pb2_grpc  # type: ignore
+import protos.service_registry_pb2 as service_registry_pb2  # type: ignore
+import protos.service_registry_pb2_grpc as service_registry_pb2_grpc  # type: ignore
 from dotenv import load_dotenv  # type: ignore
 from health_checker import check_grpc_health
 import time
@@ -62,7 +58,7 @@ class ServiceRegistryServicer(service_registry_pb2_grpc.ServiceRegistryServicer)
 
         if not services_urls:
             return service_registry_pb2.DiscoverServiceResponse()
-        
+
         # TO DO: Implement load balancing
         # for now, return the first service found
         return service_registry_pb2.DiscoverServiceResponse(
@@ -104,7 +100,6 @@ class ServiceRegistryServicer(service_registry_pb2_grpc.ServiceRegistryServicer)
                     success=False,
                     message="Service is not healthy and has been removed"
                 )
-
 
     def StatusCheck(self, request, context):
         # check the status of database connection

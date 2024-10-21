@@ -1,11 +1,14 @@
 syntax = "proto3";
 
+import "google/protobuf/empty.proto";
+
 option csharp_namespace = "UserService.Protos";
 
 service UserServiceManager {
     rpc RegisterUser (RegisterUserRequest) returns (RegisterUserResponse);
     rpc LoginUser (LoginUserRequest) returns (LoginUserResponse);
     rpc GetUserProfile (GetUserProfileRequest) returns (GetUserProfileResponse);
+    rpc Timeout (google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 
 message RegisterUserRequest {
