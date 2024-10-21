@@ -20,10 +20,27 @@ start_time = time.time()
 
 
 load_dotenv()
-service_discovery_address = 'http://service-discovery:5003'
-redis_client = redis.StrictRedis(host=os.getenv(
-    'REDIS_HOST'), port=os.getenv('REDIS_PORT'), db=0, decode_responses=True)
 
+
+discovery_host = os.getenv("DISCOVERY_HOST")
+discovery_port = os.getenv("DISCOVERY_PORT")
+
+
+redis_host = os.getenv("REDIS_HOST")
+redis_port = os.getenv("REDIS_PORT")
+
+
+user_service_name = os.getenv("USER_SERVICE_NAME")
+chat_service_name = os.getenv("CHAT_SERVICE_NAME")
+
+
+user_service_host = os.getenv("USER_SERVICE_HOST")
+chat_service_host = os.getenv("CHAT_SERVICE_HOST")
+
+
+service_discovery_address = f'http://{discovery_host}:{discovery_port}'
+redis_client = redis.StrictRedis(
+    host=redis_host, port=redis_port, db=0, decode_responses=True)
 
 app = Flask(__name__)
 
@@ -31,21 +48,19 @@ app = Flask(__name__)
 limiter = Limiter(get_remote_address, app=app, default_limits=[
                   "5 per minute"])
 
-service_discovery_port = service_discovery_address.split(":")[-1]
-
 
 registry_client = src.ServiceRegistryClient(
-    "service-discovery:" + service_discovery_port)
+    discovery_host + ":" + discovery_port)
 
-user_service_full_address = registry_client.discover_service("user_service")
-chat_service_full_address = registry_client.discover_service("chat_service")
+user_service_full_address = registry_client.discover_service(user_service_name)
+chat_service_full_address = registry_client.discover_service(chat_service_name)
 
 user_service_port = user_service_full_address.split(":")[-1]
 chat_service_port = chat_service_full_address.split(":")[-1]
 
 services = {
-    "user_service": "user-service:5002",
-    "chat_service": "chat-service:" + chat_service_port
+    "user_service": user_service_host + ":" + user_service_port,
+    "chat_service": chat_service_host + ":" + chat_service_port
 }
 
 print("user service address: ", services["user_service"])
