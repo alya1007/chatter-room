@@ -20,28 +20,33 @@ Chat applications require a high level of responsiveness and low latency. This m
 
 ![System Architecture](./system_architecture.png)
 
-- **User Service**: This service is responsible for managing user accounts. It provides functionalities such as user registration, login, and user profile management.
+- **User Service**: This service is responsible for managing user accounts. It provides functionalities such as user registration, login, and getting the profile of user.
 
 - **Chat Service**: This service is responsible for managing chats. It provides functionalities such as writing to another user (creating a chat), creating a group chat, adding users to a group chat, and sending messages.
 
+- **API Gateway**: Is responsible for routing requests to the appropriate service. It receives HTTP requests from the client and makes corresponding gRPC calls to the services.
+
+- **Service Discovery**: Is responsible for service discovery. It allows services to find each other and communicate with each other. It also provides load balancing and fault tolerance. Each service registers itself with the service discovery service when it starts up. The service discovery service maintains a list of all the services that are currently running.
+
 ## Technology Stack and Communication Patterns
 
-- **User Service**: Node.js (TypeScript)
-- **Chat Service**: Node.js (TypeScript)
+- **User Service**: C#
+- **Chat Service**: C#
 - **User Account Storage**: MongoDB
 - **Chats Storage**: MongoDB
 - **Chat Rooms Storage**: Redis
-- **Message Broker**: RabbitMQ
-- **API Gateway**: Python (Flask)
+- **API Gateway**: Python
 - **Communication Protocol**: HTTP, WebSocket, gRPC
 
 ## Data Management
 
 ### Database Separation
 
-- **User Service**: Uses its own database to manage user data, ensuring that user information is isolated and secure. Suitable for storing user credentials, profiles, and preferences.
+- **User Service**: Uses its own database to manage user data, ensuring that user information is isolated and secure. Suitable for storing user credentials, profiles, and preferences. The database has one collection: `users`.
 
-- **Chat Service**: Maintains a separate database for chat data, including private messages and chat room content. This allows for scalability and performance optimizations specific to chat operations. Unit tests will be written to ensure the correctness of the data.
+- **Chat Service**: Maintains a separate database for chat data, including private messages and chat room content. This allows for scalability and performance optimizations specific to chat operations. Unit tests will be written to ensure the correctness of the data. This database has two collections: `private_messages`, `private_messages` and `rooms`.
+
+- **Service Discovery**: For service discovery, a separate database is used to store service information, such as IP addresses and ports.
 
 ### Data Access
 
@@ -53,81 +58,74 @@ Chat applications require a high level of responsiveness and low latency. This m
 
 #### WebSocket Endpoints
 
-- **/ws/chat**: Establishes a WebSocket connection for chat operations, including sending and receiving messages, creating chat rooms, and managing chat participants.
+- **/ws/alert** - WebSocket endpoint on User Service for sending alerts to a user when a login attempt is made from a new device.
 
-Each WebSocket endpoint would:
-
-- Handle **onOpen** for establishing the connection.
-- Handle **onMessage** for real-time message sending.
-- Handle **onClose** for ending the session.
+- **/ws/chat** - WebSocket endpoint on Chat Service for handling chat messages in rooms, including sending and receiving messages. Allows for real-time communication between users in a chat room, such that every user in the room receives messages in real-time.
 
 #### HTTP Endpoints
 
 ##### User Service HTTP
 
-- POST **/users/create**: Create a new user.
-- GET **/users/{userId}**: Retrieve user details.
-- POST **/users/authenticate**: Authenticate a user and provide JWT (if applicable).
-- GET **/users/status**: Status endpoint to check the health of the user service.
+- POST **/user-service/register**: Register a new user
+- POST **/user-service/login**: Login a user
+- GET **/user-service/users/{userId}**: Get user details
+- GET **/user-service/status**: Status endpoint to check the health of the user service.
 
 ##### Chat Service HTTP
 
-- POST **/chats/private/{recipientId}**: Send a private message to another user.
-  - Request body: `{ "message": "<messageContent>" }`
-- GET **/chats/private/{recipientId}/history**: Retrieve private message history with a user.
-  - Response: `[ { "senderId": "<userId>", "message": "<messageContent>", "timestamp": "<time>" } ]`
-- POST **/chats/room/{roomId}**: Send a message to a room.
-  - Request body: `{ "message": "<messageContent>" }`
-- GET **/chats/room/{roomId}/history**: Retrieve room message history.
-  - Response: `[ { "userId": "<userId>", "message": "<messageContent>", "timestamp": "<time>" } ]`
-- POST **/rooms/create**: Create a new chat room.
-  - Request body: `{ "name": "<roomName>" }`
-- POST **/rooms/{roomId}/join**: Join a chat room.
-- POST **/rooms/{roomId}/leave**: Leave a chat room.
-- GET **/rooms/status**: Status endpoint to check the health of the chat service.
+- POST **/chat-service/private/send**: Send a private message
+- GET **/chat-service/private/{receiverId}**: Get private chat history with a user
+- POST **/chat-service/rooms/create**: Create a new chat room
+- PUT **/chat-service/rooms/{roomId}/add**: Add a user to a chat room
+- GET **/chat-service/rooms/{roomId}**: Get chat room history
+- PUT **/chat-service/rooms/{roomId}/leave**: Leave a chat room
+- GET **/chat-service/status**: Status endpoint to check the health of the chat service.
+
+##### API Gateway HTTP
+
+- GET **/status**: Status endpoint to check the health of the API Gateway.
+- GET **/timeout**: Endpoint to test the timeout functionality.
+
+##### Service Discovery HTTP
+
+- GET **/discovery/status**: Status endpoint to check the health of the service discovery service.
 
 #### gRPC Endpoints
 
 ##### User Service gRPC
 
-- **CreateUser**: Create a new user.
-  - **Request**: `CreateUserRequest { string username, string email, string password }`
-  - **Response**: `CreateUserResponse { int32 userId }`
-- **AuthenticateUser**: Authenticate a user and return a token.
-  - **Request**: `AuthenticateRequest { string username, string password }`
-  - **Response**: `AuthenticateResponse { string token }`
-- **GetUser**: Retrieve user details.
-  - **Request**: `GetUserRequest { int32 userId }`
-  - **Response**: `GetUserResponse { string username, string email }`
-- **GetUserStatus**: Check the health of the user service.
-  - **Request**: `GetUserStatusRequest {}`
-  - **Response**: `GetUserStatusResponse { bool healthy }`
+- **RegisterUser**: Register a new user.
+  - **Request**: `RegisterUserRequest { string username, string email, string password }`
+  - **Response**: `RegisterUserResponse { string message }`
+- **LoginUser**: Login a user.
+  - **Request**: `LoginUserRequest { string email, string password }`
+  - **Response**: `LoginUserResponse { string token }`
+- **GetUserProfile**: Retrieve user details.
+  - **Request**: `GetUserProfileRequest { string user_id }`
+  - **Response**: `GetUserProfileResponse { string username, string email }`
 
 ##### Chat Service gRPC
 
 - **SendPrivateMessage**: Send a private message between users.
-  - **Request**: `PrivateMessageRequest { int32 fromUserId, int32 toUserId, string message }`
-  - **Response**: `PrivateMessageResponse { bool success }`
+  - **Request**: `PrivateMessageRequest { string sender_id, string receiver_id, string message }`
+  - **Response**: `PrivateMessageResponse { string message }`
 - **GetPrivateChatHistory**: Retrieve the history of messages between two users.
-  - **Request**: `PrivateHistoryRequest { int32 fromUserId, int32 toUserId }`
-  - **Response**: `PrivateHistoryResponse { repeated Message messages }`
-- **SendRoomMessage**: Send a message to a room.
-  - **Request**: `RoomMessageRequest { int32 userId, int32 roomId, string message }`
-  - **Response**: `RoomMessageResponse { bool success }`
+  - **Request**: `PrivateHistoryRequest { string user_id, string receiver_id }`
+  - **Response**: `PrivateHistoryResponse { repeated ChatMessageProto messages }`
 - **GetRoomHistory**: Retrieve the message history for a room.
-  - **Request**: `RoomHistoryRequest { int32 roomId }`
-  - **Response**: `RoomHistoryResponse { repeated Message messages }`
+  - **Request**: `RoomHistoryRequest { string room_id }`
+  - **Response**: `RoomHistoryResponse { repeated RoomMessageProto messages }`
 - **CreateRoom**: Create a new chat room.
-  - **Request**: `CreateRoomRequest { string roomName }`
-  - **Response**: `CreateRoomResponse { int32 roomId }`
-- **JoinRoom**: Allow a user to join a specific chat room.
-  - **Request**: `JoinRoomRequest { int32 userId, int32 roomId }`
-  - **Response**: `JoinRoomResponse { bool success }`
-- **GetRoomsStatus**: Check the health of the chat service.
-  - **Request**: `GetRoomsStatusRequest {}`
-  - **Response**: `GetRoomsStatusResponse { bool healthy }`
+  - **Request**: `CreateRoomRequest { string room_name, string creator_id, repeated string members_ids }`
+  - **Response**: `CreateRoomResponse { string message }`
+- **AddUserToRoom**: Add a user to a chat room.
+  - **Request**: `AddUserToRoomRequest { string room_id, string user_id }`
+  - **Response**: `AddUserToRoomResponse { string message }`
+- **LeaveRoom**: Leave a chat room.
+  - **Request**: `LeaveRoomRequest { string room_id, string user_id }`
+  - **Response**: `LeaveRoomResponse { string message }`
 
-For each of the requests it will be necessary to implement a task timeout, to avoid blocking the service in case of a failure. If a user sends a message and the request to the chat service takes too long (perhaps because the chat service is down), a timeout is set. After this timeout, the client or API Gateway will cancel the request and return an error to the user, like "Message delivery failed."
+For each of the requests it will be necessary to implement a task timeout, to avoid blocking the service in case of a failure. If a user sends a message and the request to the chat service takes too long (perhaps because the chat service is down), a timeout is set. After this timeout, the client or API Gateway will cancel the request and return an error to the user.
 
 ### Concurrent Tasks Limit
 
