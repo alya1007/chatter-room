@@ -54,79 +54,6 @@ Chat applications require a high level of responsiveness and low latency. This m
 
 - Each service exposes endpoints that the other services can consume to perform necessary operations while maintaining data encapsulation and service autonomy.
 
-### Endpoints Definitions
-
-#### WebSocket Endpoints
-
-- **/ws/alert** - WebSocket endpoint on User Service for sending alerts to a user when a login attempt is made from a new device.
-
-- **/ws/chat** - WebSocket endpoint on Chat Service for handling chat messages in rooms, including sending and receiving messages. Allows for real-time communication between users in a chat room, such that every user in the room receives messages in real-time.
-
-#### HTTP Endpoints
-
-##### User Service HTTP
-
-- POST **/user-service/register**: Register a new user
-- POST **/user-service/login**: Login a user
-- GET **/user-service/users/{userId}**: Get user details
-- GET **/user-service/status**: Status endpoint to check the health of the user service.
-
-##### Chat Service HTTP
-
-- POST **/chat-service/private/send**: Send a private message
-- GET **/chat-service/private/{receiverId}**: Get private chat history with a user
-- POST **/chat-service/rooms/create**: Create a new chat room
-- PUT **/chat-service/rooms/{roomId}/add**: Add a user to a chat room
-- GET **/chat-service/rooms/{roomId}**: Get chat room history
-- PUT **/chat-service/rooms/{roomId}/leave**: Leave a chat room
-- GET **/chat-service/status**: Status endpoint to check the health of the chat service.
-
-##### API Gateway HTTP
-
-- GET **/status**: Status endpoint to check the health of the API Gateway.
-- GET **/timeout**: Endpoint to test the timeout functionality.
-
-##### Service Discovery HTTP
-
-- GET **/discovery/status**: Status endpoint to check the health of the service discovery service.
-
-#### gRPC Endpoints
-
-##### User Service gRPC
-
-- **RegisterUser**: Register a new user.
-  - **Request**: `RegisterUserRequest { string username, string email, string password }`
-  - **Response**: `RegisterUserResponse { string message }`
-- **LoginUser**: Login a user.
-  - **Request**: `LoginUserRequest { string email, string password }`
-  - **Response**: `LoginUserResponse { string token }`
-- **GetUserProfile**: Retrieve user details.
-  - **Request**: `GetUserProfileRequest { string user_id }`
-  - **Response**: `GetUserProfileResponse { string username, string email }`
-
-##### Chat Service gRPC
-
-- **SendPrivateMessage**: Send a private message between users.
-  - **Request**: `PrivateMessageRequest { string sender_id, string receiver_id, string message }`
-  - **Response**: `PrivateMessageResponse { string message }`
-- **GetPrivateChatHistory**: Retrieve the history of messages between two users.
-  - **Request**: `PrivateHistoryRequest { string user_id, string receiver_id }`
-  - **Response**: `PrivateHistoryResponse { repeated ChatMessageProto messages }`
-- **GetRoomHistory**: Retrieve the message history for a room.
-  - **Request**: `RoomHistoryRequest { string room_id }`
-  - **Response**: `RoomHistoryResponse { repeated RoomMessageProto messages }`
-- **CreateRoom**: Create a new chat room.
-  - **Request**: `CreateRoomRequest { string room_name, string creator_id, repeated string members_ids }`
-  - **Response**: `CreateRoomResponse { string message }`
-- **AddUserToRoom**: Add a user to a chat room.
-  - **Request**: `AddUserToRoomRequest { string room_id, string user_id }`
-  - **Response**: `AddUserToRoomResponse { string message }`
-- **LeaveRoom**: Leave a chat room.
-  - **Request**: `LeaveRoomRequest { string room_id, string user_id }`
-  - **Response**: `LeaveRoomResponse { string message }`
-
-For each of the requests it will be necessary to implement a task timeout, to avoid blocking the service in case of a failure. If a user sends a message and the request to the chat service takes too long (perhaps because the chat service is down), a timeout is set. After this timeout, the client or API Gateway will cancel the request and return an error to the user.
-
 ### Concurrent Tasks Limit
 
 #### At the API Gateway Level
@@ -137,3 +64,627 @@ For each of the requests it will be necessary to implement a task timeout, to av
 ## Deployment and Scaling
 
 The application will be deployed using Docker containers. Each service will be deployed as a separate container. Also, databases will be deployed as separate containers.
+
+## HTTP Endpoints
+
+### User Service Endpoints
+
+#### 1. Register User
+
+- Endpoint: `/user-service/register`
+- Method: `POST`
+- Description: Registers a new user with username, password, and email.
+- Request Body:
+
+```json
+{
+	"username": "string",
+	"password": "string",
+	"email": "string"
+}
+```
+
+- Response:
+
+```json
+{
+	"message": "User registered successfully"
+}
+```
+
+#### 2. Login User
+
+- Endpoint: `/user-service/login`
+- Method: `POST`
+- Description: Logs in an existing user and returns an authentication token.
+- Request Body:
+
+```json
+{
+	"email": "string",
+	"password": "string"
+}
+```
+
+- Response:
+
+```json
+{
+  "token": "string
+}
+```
+
+#### 3. Get User Profile
+
+- Endpoint: `/user-service/users/<user_id>`
+- Method: `GET`
+- Description: Retrieves the user profile details.
+- Path Parameter: `user_id` - ID of the user
+- Response:
+
+```json
+{
+	"username": "string",
+	"email": "string"
+}
+```
+
+### Chat Service Endpoints
+
+#### 1. Send Private Message
+
+- Endpoint: `/chat-service/private/send`
+- Method: `POST`
+- Description: Sends a private message to a specific user.
+- Request Body:
+
+  ```json
+  {
+  	"sender_id": "string",
+  	"receiver_id": "string",
+  	"message": "string"
+  }
+  ```
+
+- Response:
+
+  ```json
+  {
+  	"message": "Message sent successfully"
+  }
+  ```
+
+#### 2. Get Private Chat History
+
+- Endpoint: `/chat-service/private/<receiver_id>`
+- Method: `POST`
+- Description: Retrieves the private chat history between two users.
+- Path Parameter: `receiver_id` - ID of the receiving user
+- Request Body:
+
+  ```json
+  {
+  	"sender_id": "string"
+  }
+  ```
+
+- Response:
+
+  ```json
+  {
+  	"messages": [
+  		{
+  			"sender_id": "string",
+  			"receiver_id": "string",
+  			"message": "string",
+  			"created_at": "datetime",
+  			"updated_at": "datetime"
+  		}
+  	]
+  }
+  ```
+
+#### 3. Create Room
+
+- Endpoint: `/chat-service/rooms/create`
+- Method: `POST`
+- Description: Creates a new chat room with specified members.
+- Request Body:
+
+  ```json
+  {
+  	"room_name": "string",
+  	"creator_id": "string",
+  	"members_ids": ["string"]
+  }
+  ```
+
+- Response:
+
+  ```json
+  {
+  	"message": "Room created successfully"
+  }
+  ```
+
+#### 4. Add Room Member
+
+- Endpoint: `/chat-service/rooms/<room_id>/add`
+- Method: `PUT`
+- Description: Adds a user to a chat room.
+- Path Parameter: `room_id` - ID of the chat room
+- Request Body:
+
+  ```json
+  {
+  	"user_id": "string"
+  }
+  ```
+
+- Response:
+
+  ```json
+  {
+  	"message": "User added to room successfully"
+  }
+  ```
+
+#### 5. Get Room Chat History
+
+- Endpoint: `/chat-service/rooms/<room_id>`
+- Method: `GET`
+- Description: Retrieves chat history for a specific room.
+- Path Parameter: `room_id` - ID of the chat room
+- Response:
+
+  ```json
+  {
+  	"messages": [
+  		{
+  			"id": "string",
+  			"room_id": "string",
+  			"sender_id": "string",
+  			"message": "string",
+  			"created_at": "datetime",
+  			"updated_at": "datetime"
+  		}
+  	]
+  }
+  ```
+
+#### 6. Leave Room
+
+- Endpoint: `/chat-service/rooms/<room_id>/leave`
+- Method: `PUT`
+- Description: Removes a user from a specified chat room.
+- Path Parameter: `room_id` - ID of the chat room
+- Request Body:
+
+  ```json
+  {
+  	"user_id": "string"
+  }
+  ```
+
+- Response:
+
+  ```json
+  {
+  	"message": "User removed from room successfully"
+  }
+  ```
+
+### Status and Utility Endpoints
+
+#### 1. Gateway Status
+
+- Endpoint: `/status`
+- Method: `GET`
+- Description: Returns the health status of the gateway, user service, and chat service, along with the gateway's uptime.
+- Response:
+
+  ```json
+  {
+  	"gateway": "healthy",
+  	"uptime_seconds": "float",
+  	"user_service": "healthy/unhealthy",
+  	"chat_service": "healthy/unhealthy"
+  }
+  ```
+
+#### 2. Service Discovery Status
+
+- Endpoint: `/discovery/status`
+- Method: `GET`
+- Description: Returns the status of the service discovery component.
+- Response:
+
+```json
+{
+	"status": "healthy",
+	"db_status": "string",
+	"uptime_seconds": "float",
+	"registered_services": "int"
+}
+```
+
+#### 3. User Service Status
+
+- Endpoint: `/user-service/status`
+- Method: `GET`
+- Description: Checks the health of the user service.
+- Response:
+
+```json
+{
+	"status": "healthy/unhealthy"
+}
+```
+
+#### 4. Chat Service Status
+
+- Endpoint: `/chat-service/status`
+- Method: `GET`
+- Description: Checks the health of the chat service.
+- Response:
+
+```json
+{
+	"status": "healthy/unhealthy"
+}
+```
+
+#### 5. Timeout
+
+- Endpoint: `/timeout`
+- Method: `GET`
+- Description: Simulates a timeout request to the user service.
+- Response:
+
+```json
+{
+	"message": "Request timed out"
+}
+```
+
+## Grpc Endpoints
+
+### User Service Grpc
+
+#### 1. Register User
+
+- RPC Method: `RegisterUser`
+- Request Type: `RegisterUserRequest`
+- Response Type: `RegisterUserResponse`
+- Description: Registers a new user with username, password, and email.
+- Request:
+
+```protobuf
+message RegisterUserRequest {
+    string username = 1;
+    string password = 2;
+    string email = 3;
+}
+```
+
+- Response:
+
+```protobuf
+message RegisterUserResponse {
+    string message = 1;
+}
+```
+
+#### 2. Login User
+
+- RPC Method: `LoginUser`
+- Request Type: `LoginUserRequest`
+- Response Type: `LoginUserResponse`
+- Description: Logs in an existing user and returns an authentication token.
+- Request:
+
+```protobuf
+message LoginUserRequest {
+    string email = 1;
+    string password = 2;
+}
+```
+
+- Response:
+
+```protobuf
+message LoginUserResponse {
+    string token = 1;
+}
+```
+
+#### 3. Get User Profile
+
+- RPC Method: `GetUserProfile`
+- Request Type: `GetUserProfileRequest`
+- Response Type: `GetUserProfileResponse`
+- Description: Retrieves the user profile details.
+- Request:
+
+```protobuf
+message GetUserProfileRequest {
+    string user_id = 1;
+}
+```
+
+- Response:
+
+```protobuf
+message GetUserProfileResponse {
+    string username = 1;
+    string email = 2;
+}
+```
+
+#### 4. Timeout
+
+- RPC Method: `Timeout`
+- Request Type: `google.protobuf.Empty`
+- Response Type: `google.protobuf.Empty`
+- Description: Simulates a timeout for testing purposes
+
+### Chat Service Grpc
+
+#### 1. Send Private Message
+
+- RPC Method: `SendPrivateMessage`
+- Request Type: `SendPrivateMessageRequest`
+- Response Type: `SendPrivateMessageResponse`
+- Description: Sends a private message to a specific user.
+- Request:
+
+```protobuf
+message SendPrivateMessageRequest {
+  string sender_id = 1;
+  string receiver_id = 2;
+  string message = 3;
+}
+```
+
+- Response:
+
+```protobuf
+message SendPrivateMessageResponse {
+  string message = 1;
+}
+```
+
+#### 2. Get Private Chat History
+
+- RPC Method: `GetPrivateChatHistory`
+- Request Type: `GetPrivateChatHistoryRequest`
+- Response Type: `GetPrivateChatHistoryResponse`
+- Description: Retrieves the private chat history between two users.
+- Request:
+
+```protobuf
+message GetPrivateChatHistoryRequest {
+  string sender_id = 1;
+  string receiver_id = 2;
+}
+```
+
+- Response:
+
+````protobuf
+message GetPrivateChatHistoryResponse {
+  repeated ChatMessageProto messages = 1;
+}
+
+#### 3. Create Room
+
+- RPC Method: `CreateRoom`
+- Request Type: `CreateRoomRequest`
+- Response Type: `CreateRoomResponse`
+- Description: Creates a new chat room with specified members.
+- Request:
+
+```protobuf
+message CreateRoomRequest {
+  string room_name = 1;
+  string creator_id = 2;
+  repeated string members_ids = 3;
+}
+````
+
+- Response:
+
+```protobuf
+message CreateRoomResponse {
+  string message = 1;
+}
+```
+
+#### 4. Add Room Member
+
+- RPC Method: `AddUserToRoom`
+- Request Type: `AddUserToRoomRequest`
+- Response Type: `AddUserToRoomResponse`
+- Description: Adds a user to a chat room.
+- Request:
+
+```protobuf
+message AddUserToRoomRequest {
+  string room_id = 1;
+  string user_id = 2;
+}
+```
+
+- Response:
+
+```protobuf
+message AddUserToRoomResponse {
+  string message = 1;
+}
+```
+
+#### 5. Get Room Chat History
+
+- RPC Method: `GetRoomHistory`
+- Request Type: `GetRoomHistoryRequest`
+- Response Type: `GetRoomHistoryResponse`
+- Description: Retrieves chat history for a specific room.
+- Request:
+
+```protobuf
+message GetRoomHistoryRequest {
+  string room_id = 1;
+}
+```
+
+- Response:
+
+```protobuf
+message GetRoomHistoryResponse {
+  repeated RoomMessageProto messages = 1;
+}
+```
+
+#### 6. Leave Room
+
+- RPC Method: `LeaveRoom`
+- Request Type: `LeaveRoomRequest`
+- Response Type: `LeaveRoomResponse`
+- Description: Removes a user from a specified chat room.
+- Request:
+
+```protobuf
+message LeaveRoomRequest {
+  string room_id = 1;
+  string user_id = 2;
+}
+```
+
+- Response:
+
+```protobuf
+message LeaveRoomResponse {
+  string message = 1;
+}
+```
+
+### Service Discovery Grpc
+
+#### 1. Register Service
+
+- RPC Method: `RegisterService`
+- Request Type: `RegisterServiceRequest`
+- Response Type: `RegisterServiceResponse`
+- Description: Registers a new service with the service discovery component.
+- Request:
+
+```protobuf
+message RegisterServiceRequest {
+    string service_name = 1;
+    string service_url = 2;
+}
+```
+
+- Response:
+
+```protobuf
+message RegisterServiceResponse {
+    bool success = 1;
+    string message = 2;
+}
+```
+
+#### 2. Discover Service
+
+- RPC Method: `DiscoverService`
+- Request Type: `DiscoverServiceRequest`
+- Response Type: `DiscoverServiceResponse`
+- Description: Discovers a service by name.
+- Request:
+
+```protobuf
+message DiscoverServiceRequest {
+    string service_name = 1;
+}
+```
+
+- Response:
+
+```protobuf
+message DiscoverServiceResponse {
+    string service_url = 1;
+}
+```
+
+#### 3. Heartbeat
+
+- RPC Method: `Heartbeat`
+- Request Type: `HeartbeatRequest`
+- Response Type: `HeartbeatResponse`
+- Description: Sends a heartbeat signal to the service discovery component.
+- Request:
+
+```protobuf
+message HeartbeatRequest {
+    string service_url = 1;
+}
+```
+
+- Response:
+
+```protobuf
+message HeartbeatResponse {
+    bool success = 1;
+    string message = 2;
+}
+```
+
+#### 4. Status
+
+- RPC Method: `StatusCheck`
+- Request Type: `google.protobuf.Empty`
+- Response Type: `StatusCheckResponse`
+- Description: Checks the status of the service registry, including database connectivity, uptime, and details about registered services.
+- Response:
+
+```protobuf
+message StatusCheckResponse {
+    string status = 1;
+    string db_status = 2;
+    string uptime = 3;
+    string registered_services = 4;
+}
+```
+
+## Websocket
+
+### User Service
+
+The WebSocket endpoint `ws/alert` in the User Service allows real-time communication for notifications and alerts. This endpoint supports bidirectional communication with connected clients, enabling the service to receive messages and send notifications to specific users. The endpoint sends a notification when a login attempt is made from another device.
+
+- **URL**: `ws://<host>:<port>/ws/alert`
+- **Protocol**: WebSocket
+- **Path Parameter**:
+  - `userId`: The unique identifier of the user connecting to the WebSocket. It is passed as a query parameter in the WebSocket URL.
+
+#### Example Connection URL
+
+```plaintext
+ws://<host>:<port>/ws/alert?userId=<user_id>
+```
+
+### Chat Service
+
+The WebSocket Chat Service provides real-time communication for users within chat rooms. This service allows users to send and receive messages in chat rooms, which are stored in a MongoDB database and broadcasted to other connected users in the same room.
+
+- **URL**: `ws://<host>:<port>/ws/chat`
+- **Protocol**: WebSocket
+- **Query Parameters**:
+  - `userId`: The unique identifier of the user connecting to the WebSocket.
+  - `roomId`: The unique identifier of the chat room the user is joining.
+
+#### Example Connection URL
+
+```plaintext
+ws://<host>:<port>/ws/chat?userId=<user_id>&roomId=<room_id>
+```
