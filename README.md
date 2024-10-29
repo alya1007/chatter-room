@@ -110,7 +110,7 @@ The application will be deployed using Docker containers. Each service will be d
 
 ```json
 {
-  "token": "string
+	"token": "string"
 }
 ```
 
@@ -708,3 +708,44 @@ cd chatter-room
 ```bash
 sudo docker-compose up --build
 ```
+
+## Trip Circuit Breaker
+
+## Service High Availability
+
+Multiple replicas of each service are deployed using Docker Compose. The service discovery component is responsible for load balancing incoming requests across the available service instances. If a service instance becomes unresponsive, the service discovery component routes requests to other healthy instances.
+
+## ELK Stack
+
+The ELK (Elasticsearch, Logstash, Kibana) stack is used for logging and monitoring the application. Each service logs events and errors to a centralized logging system using Logstash. Elasticsearch is used to store and index the logs, and Kibana is used to visualize and analyze the log data.
+Using docker logging driver (`GELF`), logs are sent to Logstash, which processes and forwards them to Elasticsearch for indexing. Kibana is used to create dashboards and visualizations based on the log data.
+
+## Two phase commit
+
+Implement two-phase commit protocol to ensure that the changes made to the database are atomic and consistent across services. The protocol consists of two phases: prepare phase and commit phase. I will use the protocol for the `register` operation, which makes changes to both the User Service (registers a service) and the Chat Service (creates a default chat with a single user - the one being registered).
+
+## Consistent Hashing for Cache
+
+Implement consistent hashing to distribute the load across multiple cache nodes. This will help in scaling the system and ensuring that the cache is evenly distributed across the nodes. The **redis cluster** is set up in docker compose with the needed configuration for consistent hashing.
+
+## High Cache Availability
+
+High availability in caching ensures that the cache remains operational even if one or more nodes fail. Redis provides high availability with Redis Sentinel or Redis Cluster mode, and in the project is used the latest one.
+
+In Redis Cluster mode, each data shard has replicas on multiple nodes. If the primary node for a shard fails, one of the replicas is promoted to take over, ensuring continuous availability.
+
+### Setting up replicas for each redis node
+
+When setting up the Redis cluster, a replica count is specified (--cluster-replicas 1), so each primary shard has one replica. This provides failover capability if a primary node goes down.
+
+### Automatic Failover
+
+Redis Cluster automatically handles failover. When a primary node fails, a replica node is promoted to primary, and the cluster continues operating with minimal disruption
+
+### Health Monitoring
+
+Redis Cluster includes built-in health checks and will automatically handle node failover if a node becomes unresponsive.
+
+## Data Warehouse with ETL
+
+An ETL (Extract, Transform, Load) process is implemented to periodically pull data from both `User Storage` and `Chats Storage` databases into a Data Warehouse.
