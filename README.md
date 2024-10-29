@@ -18,7 +18,7 @@ Chat applications require a high level of responsiveness and low latency. This m
 
 ## Service Boundary
 
-![System Architecture](./system_architecture.png)
+![System Architecture](./system_architecture_updated.png)
 
 - **User Service**: This service is responsible for managing user accounts. It provides functionalities such as user registration, login, and getting the profile of user.
 
