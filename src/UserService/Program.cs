@@ -7,18 +7,14 @@ using System.Threading;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                      .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true);
-
-string connectionString = builder.Configuration["CustomSettings:connectionString"] ?? "";
-string databaseName = builder.Configuration["CustomSettings:databaseName"] ?? "";
-
-string serviceDiscoveryAddress = builder.Configuration["Registry:serviceDiscoveryAddress"] ?? "";
-string serviceName = builder.Configuration["Registry:serviceName"] ?? "";
+string connectionString = Environment.GetEnvironmentVariable("USER_CONNECTION_STRING") ?? "";
+string databaseName = Environment.GetEnvironmentVariable("USER_DATABASE_NAME") ?? "";
+string serviceDiscoveryAddress = Environment.GetEnvironmentVariable("SERVICE_DISCOVERY_ADDRESS") ?? "";
+string serviceName = Environment.GetEnvironmentVariable("SERVICE_NAME") ?? "";
 
 var serviceRegistryClient = new ServiceRegistryClient(serviceDiscoveryAddress);
 
-var serviceUrl = $"user-service:{builder.Configuration["Registry:port"]}";
+var serviceUrl = $"user-service:{Environment.GetEnvironmentVariable("PORT")}";
 
 await serviceRegistryClient.RegisterServiceAsync(serviceName, serviceUrl);
 

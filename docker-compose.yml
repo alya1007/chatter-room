@@ -32,6 +32,12 @@ services:
       - app-network
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - USER_CONNECTION_STRING=${USER_CONNECTION_STRING}
+      - USER_DATABASE_NAME=${USER_DATABASE_NAME}
+      - SERVICE_DISCOVERY_ADDRESS=${SERVICE_DISCOVERY_ADDRESS}
+      - PORT=5002
+      - SERVICE_NAME=user_service
+      - JWT_SECRET=${JWT_SECRET}
 
   chat-service:
     build:
@@ -47,6 +53,12 @@ services:
       - app-network
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - CHAT_CONNECTION_STRING=${CHAT_CONNECTION_STRING}
+      - CHAT_DATABASE_NAME=${CHAT_DATABASE_NAME}
+      - SERVICE_DISCOVERY_ADDRESS=${SERVICE_DISCOVERY_ADDRESS}
+      - PORT=5001
+      - SERVICE_NAME=chat_service
+      - USER_SERVICE_NAME=user_service
 
   gateway:
     build:

@@ -7,18 +7,12 @@ namespace UserService.Utils
 {
     public static class JwtGenerator
     {
-        private static readonly IConfiguration _configuration;
         private static readonly string _secretKey;
 
         static JwtGenerator()
         {
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json", optional: true);
-
-            _configuration = builder.Build();
-            _secretKey = _configuration["JWT:jwtSecret"] ?? "";
+            _secretKey = Environment.GetEnvironmentVariable("JWT_SECRET")!;
+            Console.WriteLine("JWT_SECRET: " + _secretKey);
         }
         public static string GenerateJwt(string email, string username, string id)
         {
