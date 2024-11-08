@@ -34,22 +34,4 @@ public class ServiceRegistryClient
             throw new Exception($"Failed to register service {serviceName}. {e.Message}");
         }
     }
-
-    public async Task<string> DiscoverServiceAsync(string serviceName)
-    {
-        try
-        {
-            var request = new DiscoverServiceRequest
-            {
-                ServiceName = serviceName
-            };
-            var response = await _client.DiscoverServiceAsync(request);
-            return response.ServiceUrl;
-        }
-        catch (RpcException e)
-        {
-            throw new Exception($"Failed to discover service {serviceName}. {e.Message}");
-        }
-    }
-
 }
