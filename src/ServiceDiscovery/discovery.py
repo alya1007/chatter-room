@@ -49,24 +49,19 @@ class ServiceRegistryServicer(service_registry_pb2_grpc.ServiceRegistryServicer)
             message=f"Service {service_name} registered successfully"
         )
 
-    # Get the location of a service
-    def DiscoverService(self, request, context):
+    # Get the location of instances of a service
+    def DiscoverServices(self, request, context):
         service_name = request.service_name
 
         # Find all instances of the service
         services_cursor = collection.find({'service_name': service_name})
-        services_urls = []
-
-        for service in services_cursor:
-            services_urls.append(service['service_url'])
+        services_urls = [service['service_url'] for service in services_cursor]
 
         if not services_urls:
-            return service_registry_pb2.DiscoverServiceResponse()
+            return service_registry_pb2.DiscoverServicesResponse()
 
-        # TO DO: Implement load balancing
-        # for now, return the first service found
-        return service_registry_pb2.DiscoverServiceResponse(
-            service_url=services_urls[0]
+        return service_registry_pb2.DiscoverServicesResponse(
+            service_urls=services_urls
         )
 
     # Update service heartbeat

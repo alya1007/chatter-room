@@ -4,7 +4,7 @@ import "google/protobuf/empty.proto";
 
 service ServiceRegistry {
     rpc RegisterService(RegisterServiceRequest) returns (RegisterServiceResponse);
-    rpc DiscoverService(DiscoverServiceRequest) returns (DiscoverServiceResponse);
+    rpc DiscoverServices(DiscoverServicesRequest) returns (DiscoverServicesResponse);
     rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
     rpc StatusCheck(google.protobuf.Empty) returns (StatusCheckResponse);
 }
@@ -19,17 +19,19 @@ message RegisterServiceResponse {
     string message = 2;
 }
 
-message DiscoverServiceRequest {
+message DiscoverServicesRequest {
     string service_name = 1;
 }
 
-message DiscoverServiceResponse {
-    string service_url = 1;
+message DiscoverServicesResponse {
+    repeated string service_urls = 1;
 }
 
 message Service {
-    string service_url = 1;
-    string last_seen_at = 2;
+    string service_name = 1;
+    string service_url = 2;
+    string registered_at = 3;
+    string last_seen_at = 4;
 }
 
 message HeartbeatRequest {

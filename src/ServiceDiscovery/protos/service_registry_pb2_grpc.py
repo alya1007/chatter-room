@@ -40,10 +40,10 @@ class ServiceRegistryStub(object):
                 request_serializer=protos_dot_service__registry__pb2.RegisterServiceRequest.SerializeToString,
                 response_deserializer=protos_dot_service__registry__pb2.RegisterServiceResponse.FromString,
                 _registered_method=True)
-        self.DiscoverService = channel.unary_unary(
-                '/ServiceRegistry/DiscoverService',
-                request_serializer=protos_dot_service__registry__pb2.DiscoverServiceRequest.SerializeToString,
-                response_deserializer=protos_dot_service__registry__pb2.DiscoverServiceResponse.FromString,
+        self.DiscoverServices = channel.unary_unary(
+                '/ServiceRegistry/DiscoverServices',
+                request_serializer=protos_dot_service__registry__pb2.DiscoverServicesRequest.SerializeToString,
+                response_deserializer=protos_dot_service__registry__pb2.DiscoverServicesResponse.FromString,
                 _registered_method=True)
         self.Heartbeat = channel.unary_unary(
                 '/ServiceRegistry/Heartbeat',
@@ -66,7 +66,7 @@ class ServiceRegistryServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def DiscoverService(self, request, context):
+    def DiscoverServices(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -92,10 +92,10 @@ def add_ServiceRegistryServicer_to_server(servicer, server):
                     request_deserializer=protos_dot_service__registry__pb2.RegisterServiceRequest.FromString,
                     response_serializer=protos_dot_service__registry__pb2.RegisterServiceResponse.SerializeToString,
             ),
-            'DiscoverService': grpc.unary_unary_rpc_method_handler(
-                    servicer.DiscoverService,
-                    request_deserializer=protos_dot_service__registry__pb2.DiscoverServiceRequest.FromString,
-                    response_serializer=protos_dot_service__registry__pb2.DiscoverServiceResponse.SerializeToString,
+            'DiscoverServices': grpc.unary_unary_rpc_method_handler(
+                    servicer.DiscoverServices,
+                    request_deserializer=protos_dot_service__registry__pb2.DiscoverServicesRequest.FromString,
+                    response_serializer=protos_dot_service__registry__pb2.DiscoverServicesResponse.SerializeToString,
             ),
             'Heartbeat': grpc.unary_unary_rpc_method_handler(
                     servicer.Heartbeat,
@@ -146,7 +146,7 @@ class ServiceRegistry(object):
             _registered_method=True)
 
     @staticmethod
-    def DiscoverService(request,
+    def DiscoverServices(request,
             target,
             options=(),
             channel_credentials=None,
@@ -159,9 +159,9 @@ class ServiceRegistry(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/ServiceRegistry/DiscoverService',
-            protos_dot_service__registry__pb2.DiscoverServiceRequest.SerializeToString,
-            protos_dot_service__registry__pb2.DiscoverServiceResponse.FromString,
+            '/ServiceRegistry/DiscoverServices',
+            protos_dot_service__registry__pb2.DiscoverServicesRequest.SerializeToString,
+            protos_dot_service__registry__pb2.DiscoverServicesResponse.FromString,
             options,
             channel_credentials,
             insecure,
