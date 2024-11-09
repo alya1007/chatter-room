@@ -46,11 +46,59 @@ services:
       - USER_CONNECTION_STRING=${CONNECTION_STRING}
       - USER_DATABASE_NAME=${USER_DATABASE_NAME}
       - SERVICE_DISCOVERY_ADDRESS=${SERVICE_DISCOVERY_ADDRESS}
-      - PORT=50022
+      - SERVICE_URL=user-service:50022
       - SERVICE_NAME=user_service
       - JWT_SECRET=${JWT_SECRET}
       - GRPC_PORT=50022
       - WEBSOCKET_PORT=50077
+
+  user-service2:
+    build:
+      context: ./src/UserService
+    container_name: user-service2
+    ports:
+      - "50023:50023"
+      - "50078:50078"
+    depends_on:
+      - redis
+      - service-discovery
+      - mongodb
+    networks:
+      - app-network
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - USER_CONNECTION_STRING=${CONNECTION_STRING}
+      - USER_DATABASE_NAME=${USER_DATABASE_NAME}
+      - SERVICE_DISCOVERY_ADDRESS=${SERVICE_DISCOVERY_ADDRESS}
+      - SERVICE_URL=user-service2:50023
+      - SERVICE_NAME=user_service
+      - JWT_SECRET=${JWT_SECRET}
+      - GRPC_PORT=50023
+      - WEBSOCKET_PORT=50078
+
+  # user-service3:
+  #   build:
+  #     context: ./src/UserService
+  #   container_name: user-service3
+  #   ports:
+  #     - "50024:50024"
+  #     - "50079:50079"
+  #   depends_on:
+  #     - redis
+  #     - service-discovery
+  #     - mongodb
+  #   networks:
+  #     - app-network
+  #   environment:
+  #     - ASPNETCORE_ENVIRONMENT=Development
+  #     - USER_CONNECTION_STRING=${CONNECTION_STRING}
+  #     - USER_DATABASE_NAME=${USER_DATABASE_NAME}
+  #     - SERVICE_DISCOVERY_ADDRESS=${SERVICE_DISCOVERY_ADDRESS}
+  #     - PORT=50024
+  #     - SERVICE_NAME=user_service
+  #     - JWT_SECRET=${JWT_SECRET}
+  #     - GRPC_PORT=50024
+  #     - WEBSOCKET_PORT=50079
 
   chat-service:
     build:
@@ -76,6 +124,30 @@ services:
       - GRPC_PORT=50033
       - WEBSOCKET_PORT=50088
 
+  chat-service2:
+    build:
+      context: ./src/ChatService
+    container_name: chat-service2
+    ports:
+      - "50034:50034"
+      - "50089:50089"
+    depends_on:
+      - service-discovery
+      - user-service
+      - mongodb
+    networks:
+      - app-network
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - CHAT_CONNECTION_STRING=${CONNECTION_STRING}
+      - CHAT_DATABASE_NAME=${CHAT_DATABASE_NAME}
+      - SERVICE_DISCOVERY_ADDRESS=${SERVICE_DISCOVERY_ADDRESS}
+      - PORT=50034
+      - SERVICE_NAME=chat_service
+      - USER_SERVICE_NAME=user_service
+      - GRPC_PORT=50034
+      - WEBSOCKET_PORT=50089
+
   gateway:
     build:
       context: ./src/Gateway
@@ -85,6 +157,7 @@ services:
     depends_on:
       - service-discovery
       - user-service
+      - user-service2
       - chat-service
       - redis
       - mongodb

@@ -27,10 +27,10 @@ string connectionString = Environment.GetEnvironmentVariable("USER_CONNECTION_ST
 string databaseName = Environment.GetEnvironmentVariable("USER_DATABASE_NAME") ?? "";
 string serviceDiscoveryAddress = Environment.GetEnvironmentVariable("SERVICE_DISCOVERY_ADDRESS") ?? "";
 string serviceName = Environment.GetEnvironmentVariable("SERVICE_NAME") ?? "";
+var serviceUrl = Environment.GetEnvironmentVariable("SERVICE_URL") ?? "";
 
 var serviceRegistryClient = new ServiceRegistryClient(serviceDiscoveryAddress);
 
-var serviceUrl = $"user-service:{Environment.GetEnvironmentVariable("PORT")}";
 
 await serviceRegistryClient.RegisterServiceAsync(serviceName, serviceUrl);
 
