@@ -28,14 +28,13 @@ string databaseName = Environment.GetEnvironmentVariable("CHAT_DATABASE_NAME") ?
 string serviceDiscoveryAddress = Environment.GetEnvironmentVariable("SERVICE_DISCOVERY_ADDRESS") ?? "";
 string serviceName = Environment.GetEnvironmentVariable("SERVICE_NAME") ?? "";
 string userServiceName = Environment.GetEnvironmentVariable("USER_SERVICE_NAME") ?? "";
+var serviceUrl = Environment.GetEnvironmentVariable("SERVICE_URL") ?? "";
 
 var serviceRegistryClient = new ServiceRegistryClient(serviceDiscoveryAddress);
 
-var serviceUrl = $"chat-service:{Environment.GetEnvironmentVariable("PORT")}";
-
 await serviceRegistryClient.RegisterServiceAsync(serviceName, serviceUrl);
 
-string userServiceUrl = await serviceRegistryClient.DiscoverServiceAsync(userServiceName);
+string userServiceUrl = await serviceRegistryClient.DiscoverServicesAsync(userServiceName);
 string userServiceFullUrl = $"http://{userServiceUrl}";
 
 builder.Services.AddGrpc();

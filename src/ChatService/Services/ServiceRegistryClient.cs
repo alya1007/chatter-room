@@ -31,20 +31,20 @@ public class ServiceRegistryClient
         }
     }
 
-    public async Task<string> DiscoverServiceAsync(string serviceName)
+    public async Task<string> DiscoverServicesAsync(string serviceName)
     {
         try
         {
-            var request = new DiscoverServiceRequest
+            var request = new DiscoverServicesRequest
             {
                 ServiceName = serviceName
             };
-            var response = await _client.DiscoverServiceAsync(request);
-            return response.ServiceUrl;
+            var response = await _client.DiscoverServicesAsync(request);
+            return response.ServiceUrls[0];
         }
         catch (RpcException e)
         {
-            throw new Exception($"Failed to discover service {serviceName}. {e.Message}");
+            throw new Exception($"Failed to discover services of {serviceName}. {e.Message}");
         }
     }
 
