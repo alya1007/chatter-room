@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1dprotos/service_registry.proto\x1a\x1bgoogle/protobuf/empty.proto\"C\n\x16RegisterServiceRequest\x12\x14\n\x0cservice_name\x18\x01 \x01(\t\x12\x13\n\x0bservice_url\x18\x02 \x01(\t\";\n\x17RegisterServiceResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\".\n\x16\x44iscoverServiceRequest\x12\x14\n\x0cservice_name\x18\x01 \x01(\t\".\n\x17\x44iscoverServiceResponse\x12\x13\n\x0bservice_url\x18\x01 \x01(\t\"4\n\x07Service\x12\x13\n\x0bservice_url\x18\x01 \x01(\t\x12\x14\n\x0clast_seen_at\x18\x02 \x01(\t\"\'\n\x10HeartbeatRequest\x12\x13\n\x0bservice_url\x18\x01 \x01(\t\"5\n\x11HeartbeatResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"e\n\x13StatusCheckResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\x12\x11\n\tdb_status\x18\x02 \x01(\t\x12\x0e\n\x06uptime\x18\x03 \x01(\t\x12\x1b\n\x13registered_services\x18\x04 \x01(\t2\x8e\x02\n\x0fServiceRegistry\x12\x44\n\x0fRegisterService\x12\x17.RegisterServiceRequest\x1a\x18.RegisterServiceResponse\x12\x44\n\x0f\x44iscoverService\x12\x17.DiscoverServiceRequest\x1a\x18.DiscoverServiceResponse\x12\x32\n\tHeartbeat\x12\x11.HeartbeatRequest\x1a\x12.HeartbeatResponse\x12;\n\x0bStatusCheck\x12\x16.google.protobuf.Empty\x1a\x14.StatusCheckResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1dprotos/service_registry.proto\x1a\x1bgoogle/protobuf/empty.proto\"C\n\x16RegisterServiceRequest\x12\x14\n\x0cservice_name\x18\x01 \x01(\t\x12\x13\n\x0bservice_url\x18\x02 \x01(\t\";\n\x17RegisterServiceResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"/\n\x17\x44iscoverServicesRequest\x12\x14\n\x0cservice_name\x18\x01 \x01(\t\"0\n\x18\x44iscoverServicesResponse\x12\x14\n\x0cservice_urls\x18\x01 \x03(\t\"a\n\x07Service\x12\x14\n\x0cservice_name\x18\x01 \x01(\t\x12\x13\n\x0bservice_url\x18\x02 \x01(\t\x12\x15\n\rregistered_at\x18\x03 \x01(\t\x12\x14\n\x0clast_seen_at\x18\x04 \x01(\t\"\'\n\x10HeartbeatRequest\x12\x13\n\x0bservice_url\x18\x01 \x01(\t\"5\n\x11HeartbeatResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"e\n\x13StatusCheckResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\x12\x11\n\tdb_status\x18\x02 \x01(\t\x12\x0e\n\x06uptime\x18\x03 \x01(\t\x12\x1b\n\x13registered_services\x18\x04 \x01(\t2\x91\x02\n\x0fServiceRegistry\x12\x44\n\x0fRegisterService\x12\x17.RegisterServiceRequest\x1a\x18.RegisterServiceResponse\x12G\n\x10\x44iscoverServices\x12\x18.DiscoverServicesRequest\x1a\x19.DiscoverServicesResponse\x12\x32\n\tHeartbeat\x12\x11.HeartbeatRequest\x1a\x12.HeartbeatResponse\x12;\n\x0bStatusCheck\x12\x16.google.protobuf.Empty\x1a\x14.StatusCheckResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -36,18 +36,18 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_REGISTERSERVICEREQUEST']._serialized_end=129
   _globals['_REGISTERSERVICERESPONSE']._serialized_start=131
   _globals['_REGISTERSERVICERESPONSE']._serialized_end=190
-  _globals['_DISCOVERSERVICEREQUEST']._serialized_start=192
-  _globals['_DISCOVERSERVICEREQUEST']._serialized_end=238
-  _globals['_DISCOVERSERVICERESPONSE']._serialized_start=240
-  _globals['_DISCOVERSERVICERESPONSE']._serialized_end=286
-  _globals['_SERVICE']._serialized_start=288
-  _globals['_SERVICE']._serialized_end=340
-  _globals['_HEARTBEATREQUEST']._serialized_start=342
-  _globals['_HEARTBEATREQUEST']._serialized_end=381
-  _globals['_HEARTBEATRESPONSE']._serialized_start=383
-  _globals['_HEARTBEATRESPONSE']._serialized_end=436
-  _globals['_STATUSCHECKRESPONSE']._serialized_start=438
-  _globals['_STATUSCHECKRESPONSE']._serialized_end=539
-  _globals['_SERVICEREGISTRY']._serialized_start=542
-  _globals['_SERVICEREGISTRY']._serialized_end=812
+  _globals['_DISCOVERSERVICESREQUEST']._serialized_start=192
+  _globals['_DISCOVERSERVICESREQUEST']._serialized_end=239
+  _globals['_DISCOVERSERVICESRESPONSE']._serialized_start=241
+  _globals['_DISCOVERSERVICESRESPONSE']._serialized_end=289
+  _globals['_SERVICE']._serialized_start=291
+  _globals['_SERVICE']._serialized_end=388
+  _globals['_HEARTBEATREQUEST']._serialized_start=390
+  _globals['_HEARTBEATREQUEST']._serialized_end=429
+  _globals['_HEARTBEATRESPONSE']._serialized_start=431
+  _globals['_HEARTBEATRESPONSE']._serialized_end=484
+  _globals['_STATUSCHECKRESPONSE']._serialized_start=486
+  _globals['_STATUSCHECKRESPONSE']._serialized_end=587
+  _globals['_SERVICEREGISTRY']._serialized_start=590
+  _globals['_SERVICEREGISTRY']._serialized_end=863
 # @@protoc_insertion_point(module_scope)

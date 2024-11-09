@@ -8,15 +8,15 @@ class ServiceRegistryClient:
         self.channel = grpc.insecure_channel(registry_url)
         self.stub = service_registry_pb2_grpc.ServiceRegistryStub(self.channel)
 
-    def discover_service(self, service_name):
+    def discover_services(self, service_name):
         try:
-            response = self.stub.DiscoverService(
-                service_registry_pb2.DiscoverServiceRequest(
+            response = self.stub.DiscoverServices(
+                service_registry_pb2.DiscoverServicesRequest(
                     service_name=service_name
                 )
             )
 
-            return response.service_url
+            return response.service_urls
         except grpc.RpcError as e:
             raise Exception(e.details())
 
