@@ -2,6 +2,7 @@ import json
 import redis  # type: ignore
 from dotenv import load_dotenv  # type: ignore
 import service_registry_client as src  # type: ignore
+import load_balancer as lb  # type: ignore
 from flask import Flask, jsonify, request
 import grpc  # type: ignore
 import protos.user_pb2_grpc as user_pb2_grpc  # type: ignore
@@ -13,10 +14,15 @@ import time
 import utils.health_checker as health_checker  # type: ignore
 from flask_limiter import Limiter  # type: ignore
 from flask_limiter.util import get_remote_address  # type: ignore
+import logging
 import os
 
 
 start_time = time.time()
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 load_dotenv()
@@ -46,30 +52,37 @@ limiter = Limiter(get_remote_address, app=app, default_limits=[
 
 registry_client = src.ServiceRegistryClient(discovery_address)
 
-user_service_full_addresses = registry_client.discover_services(
+user_service_addresses = registry_client.discover_services(
     user_service_name)
-chat_service_full_addresses = registry_client.discover_services(
+chat_service_addresses = registry_client.discover_services(
     chat_service_name)
 
-services = {
-    "user_service": user_service_full_addresses[1],
-    "chat_service": chat_service_full_addresses[0]
-}
 
-print("user service address: ", services["user_service"])
-print("chat service address: ", services["chat_service"])
+user_service_load_balancer = lb.RoundRobinLoadBalancer(
+    user_service_addresses)
+chat_service_load_balancer = lb.RoundRobinLoadBalancer(
+    chat_service_addresses)
 
-user_channel = grpc.insecure_channel(services["user_service"])
-chat_channel = grpc.insecure_channel(services["chat_service"])
 
-user_service_stub = user_pb2_grpc.UserServiceManagerStub(user_channel)
-chat_service_stub = chat_pb2_grpc.ChatServiceManagerStub(chat_channel)
+def get_user_service_stub():
+    user_service_address = user_service_load_balancer.get_server()
+    logger.info("Request to user service: ", user_service_address)
+    user_channel = grpc.insecure_channel(user_service_address)
+    return user_pb2_grpc.UserServiceManagerStub(user_channel)
+
+
+def get_chat_service_stub():
+    chat_service_address = chat_service_load_balancer.get_server()
+    logger.info("Request to chat service: ", chat_service_address)
+    chat_channel = grpc.insecure_channel(chat_service_address)
+    return chat_pb2_grpc.ChatServiceManagerStub(chat_channel)
 
 
 @app.route("/user-service/register", methods=["POST"])
 def register_user():
     data = request.get_json()
     try:
+        user_service_stub = get_user_service_stub()
         response = user_service_stub.RegisterUser(
             user_pb2.RegisterUserRequest(
                 username=data["username"], password=data["password"], email=data["email"]),
@@ -84,6 +97,7 @@ def register_user():
 def login_user():
     data = request.get_json()
     try:
+        user_service_stub = get_user_service_stub()
         response = user_service_stub.LoginUser(
             user_pb2.LoginUserRequest(email=data["email"], password=data["password"]), timeout=5.0)
         return jsonify({"token": response.token})
@@ -100,6 +114,7 @@ def get_user_profile(user_id):
         return json.loads(cached_profile)
 
     try:
+        user_service_stub = get_user_service_stub()
         response = user_service_stub.GetUserProfile(user_pb2.GetUserProfileRequest(
             user_id=user_id
         ), timeout=5.0)
@@ -117,6 +132,7 @@ def get_user_profile(user_id):
 def send_private_message():
     data = request.get_json()
     try:
+        chat_service_stub = get_chat_service_stub()
         response = chat_service_stub.SendPrivateMessage(
             chat_pb2.SendPrivateMessageRequest(sender_id=data["sender_id"], receiver_id=data["receiver_id"], message=data["message"]), timeout=5.0)
         return jsonify({"message": response.message})
@@ -128,6 +144,7 @@ def send_private_message():
 def get_private_chat_history(receiver_id):
     data = request.get_json()
     try:
+        chat_service_stub = get_chat_service_stub()
         response = chat_service_stub.GetPrivateChatHistory(
             chat_pb2.GetPrivateChatHistoryRequest(sender_id=data["sender_id"], receiver_id=receiver_id), timeout=5.0)
         messages = []
@@ -148,6 +165,7 @@ def get_private_chat_history(receiver_id):
 def create_room():
     data = request.get_json()
     try:
+        chat_service_stub = get_chat_service_stub()
         response = chat_service_stub.CreateRoom(
             chat_pb2.CreateRoomRequest(
                 room_name=data["room_name"],
@@ -163,6 +181,7 @@ def create_room():
 def add_room_member(room_id):
     data = request.get_json()
     try:
+        chat_service_stub = get_chat_service_stub()
         response = chat_service_stub.AddUserToRoom(
             chat_pb2.AddUserToRoomRequest(
                 room_id=room_id,
@@ -176,6 +195,7 @@ def add_room_member(room_id):
 @app.route('/chat-service/rooms/<room_id>', methods=['GET'])
 def get_room_chat_history(room_id):
     try:
+        chat_service_stub = get_chat_service_stub()
         response = chat_service_stub.GetRoomHistory(
             chat_pb2.GetRoomHistoryRequest(
                 room_id=room_id
@@ -200,6 +220,7 @@ def get_room_chat_history(room_id):
 def leave_room(room_id):
     data = request.get_json()
     try:
+        chat_service_stub = get_chat_service_stub()
         response = chat_service_stub.LeaveRoom(
             chat_pb2.LeaveRoomRequest(
                 room_id=room_id,
@@ -216,9 +237,7 @@ def gateway_status():
 
     status = {
         "gateway": "healthy",
-        "uptime_seconds": round(uptime, 2),
-        "user_service": registry_client.heartbeat(services["user_service"]),
-        "chat_service": registry_client.heartbeat(services["chat_service"])
+        "uptime_seconds": round(uptime, 2)
     }
 
     return jsonify(status), 200
@@ -231,18 +250,23 @@ def discovery_status():
 
 @app.route('/user-service/status', methods=['GET'])
 def user_service_status():
-    return jsonify({"status": "healthy"}) if health_checker.check_grpc_health(services["user_service"]) else jsonify({"status": "unhealthy"})
+    statuses = [user_service_address for user_service_address in user_service_addresses if health_checker.check_grpc_health(
+        user_service_address)]
+    return jsonify({"status": statuses}) if statuses else jsonify({"status": "unhealthy"})
 
 
-@app.route('/chat-service/status', methods=['GET'])
+@ app.route('/chat-service/status', methods=['GET'])
 def chat_service_status():
-    return jsonify({"status": "healthy"}) if health_checker.check_grpc_health(services["chat_service"]) else jsonify({"status": "unhealthy"})
+    statuses = [chat_service_address for chat_service_address in chat_service_addresses if health_checker.check_grpc_health(
+        chat_service_address)]
+    return jsonify({"status": statuses}) if statuses else jsonify({"status": "unhealthy"})
 
 
-@app.route('/timeout', methods=['GET'])
+@ app.route('/timeout', methods=['GET'])
 def timeout():
     empty = user_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
     try:
+        user_service_stub = get_user_service_stub()
         user_service_stub.Timeout(empty, timeout=5.0)
     except grpc.RpcError as e:
         return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
