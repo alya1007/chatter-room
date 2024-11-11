@@ -1,111 +1,74 @@
 import json
-import redis  # type: ignore
-from dotenv import load_dotenv  # type: ignore
-import service_registry_client as src  # type: ignore
-import load_balancer as lb  # type: ignore
-from flask import Flask, jsonify, request
+from flask import jsonify, request
 import grpc  # type: ignore
 import protos.user_pb2_grpc as user_pb2_grpc  # type: ignore
 import protos.user_pb2 as user_pb2  # type: ignore
 import protos.chat_pb2_grpc as chat_pb2_grpc  # type: ignore
 import protos.chat_pb2 as chat_pb2  # type: ignore
 import utils.status_codes_translator as code_t  # type: ignore
+import utils.retry_request as retry  # type: ignore
 import time
 import utils.health_checker as health_checker  # type: ignore
-from flask_limiter import Limiter  # type: ignore
-from flask_limiter.util import get_remote_address  # type: ignore
-import logging
-import os
+from init import initialize  # type: ignore
 
 
 start_time = time.time()
 
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-
-load_dotenv()
-
-
-discovery_address = os.getenv("DISCOVERY_ADDRESS")
-print("discovery_address: ", discovery_address)
-
-redis_host = os.getenv("REDIS_HOST")
-redis_port = os.getenv("REDIS_PORT")
-
-
-user_service_name = os.getenv("USER_SERVICE_NAME")
-chat_service_name = os.getenv("CHAT_SERVICE_NAME")
-
-
-service_discovery_address = f'http://{discovery_address}'
-redis_client = redis.StrictRedis(
-    host=redis_host, port=redis_port, db=0, decode_responses=True)
-
-app = Flask(__name__)
-
-
-limiter = Limiter(get_remote_address, app=app, default_limits=[
-                  "5 per minute"])
-
-
-registry_client = src.ServiceRegistryClient(discovery_address)
-
-user_service_addresses = registry_client.discover_services(
-    user_service_name)
-chat_service_addresses = registry_client.discover_services(
-    chat_service_name)
-
-
-user_service_load_balancer = lb.RoundRobinLoadBalancer(
-    user_service_addresses)
-chat_service_load_balancer = lb.RoundRobinLoadBalancer(
-    chat_service_addresses)
+app, redis_client, user_service_load_balancer, chat_service_load_balancer, chat_service_circuit_breaker, user_service_circuit_breaker, limiter, logger, registry_client, user_service_addresses, chat_service_addresses = initialize()
 
 
 def get_user_service_stub():
     user_service_address = user_service_load_balancer.get_server()
     logger.info("Request to user service: ", user_service_address)
     user_channel = grpc.insecure_channel(user_service_address)
-    return user_pb2_grpc.UserServiceManagerStub(user_channel)
+    return user_pb2_grpc.UserServiceManagerStub(user_channel), user_service_address
 
 
 def get_chat_service_stub():
     chat_service_address = chat_service_load_balancer.get_server()
     logger.info("Request to chat service: ", chat_service_address)
     chat_channel = grpc.insecure_channel(chat_service_address)
-    return chat_pb2_grpc.ChatServiceManagerStub(chat_channel)
+    return chat_pb2_grpc.ChatServiceManagerStub(chat_channel), chat_service_address
 
 
 @app.route("/user-service/register", methods=["POST"])
 def register_user():
     data = request.get_json()
     try:
-        user_service_stub = get_user_service_stub()
-        response = user_service_stub.RegisterUser(
-            user_pb2.RegisterUserRequest(
-                username=data["username"], password=data["password"], email=data["email"]),
-            timeout=5.0
+        user_service_stub, user_service_address = get_user_service_stub()
+        response = retry.retry_request_with_circuit_breaker(
+            stub_method=user_service_stub.RegisterUser,
+            request_data=user_pb2.RegisterUserRequest(
+                username=data["username"], email=data["email"], password=data["password"]),
+            service_address=user_service_address,
+            circuit_breaker=user_service_circuit_breaker,
+            logger=logger
         )
         return jsonify({"message": response.message})
     except grpc.RpcError as e:
         return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
 
 
-@app.route('/user-service/login', methods=['POST'])
+@ app.route('/user-service/login', methods=['POST'])
 def login_user():
     data = request.get_json()
     try:
-        user_service_stub = get_user_service_stub()
-        response = user_service_stub.LoginUser(
-            user_pb2.LoginUserRequest(email=data["email"], password=data["password"]), timeout=5.0)
+        user_service_stub, user_service_address = get_user_service_stub()
+        response = retry.retry_request_with_circuit_breaker(
+            stub_method=user_service_stub.LoginUser,
+            request_data=user_pb2.LoginUserRequest(
+                email=data["email"], password=data["password"]),
+            service_address=user_service_address,
+            circuit_breaker=user_service_circuit_breaker,
+            logger=logger
+        )
         return jsonify({"token": response.token})
     except grpc.RpcError as e:
         return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
 
 
-@app.route('/user-service/users/<user_id>', methods=['GET'])
+@ app.route('/user-service/users/<user_id>', methods=['GET'])
 def get_user_profile(user_id):
     cache_key = f"user_profile:{user_id}"
 
@@ -114,39 +77,60 @@ def get_user_profile(user_id):
         return json.loads(cached_profile)
 
     try:
-        user_service_stub = get_user_service_stub()
-        response = user_service_stub.GetUserProfile(user_pb2.GetUserProfileRequest(
-            user_id=user_id
-        ), timeout=5.0)
+        user_service_stub, user_service_address = get_user_service_stub()
+
+        response = retry.retry_request_with_circuit_breaker(
+            stub_method=user_service_stub.GetUserProfile,
+            request_data=user_pb2.GetUserProfileRequest(
+                user_id=user_id
+            ),
+            service_address=user_service_address,
+            circuit_breaker=user_service_circuit_breaker,
+            logger=logger
+        )
+
         user_profile = {
             "username": response.username,
             "email": response.email
         }
+
         redis_client.setex(cache_key, 60, json.dumps(user_profile))
         return jsonify(user_profile)
     except grpc.RpcError as e:
         return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
 
 
-@app.route('/chat-service/private/send', methods=['POST'])
+@ app.route('/chat-service/private/send', methods=['POST'])
 def send_private_message():
     data = request.get_json()
     try:
-        chat_service_stub = get_chat_service_stub()
-        response = chat_service_stub.SendPrivateMessage(
-            chat_pb2.SendPrivateMessageRequest(sender_id=data["sender_id"], receiver_id=data["receiver_id"], message=data["message"]), timeout=5.0)
+        chat_service_stub, chat_service_address = get_chat_service_stub()
+        response = retry.retry_request_with_circuit_breaker(
+            stub_method=chat_service_stub.SendPrivateMessage,
+            request_data=chat_pb2.SendPrivateMessageRequest(
+                sender_id=data["sender_id"], receiver_id=data["receiver_id"], message=data["message"]),
+            service_address=chat_service_address,
+            circuit_breaker=chat_service_circuit_breaker,
+            logger=logger
+        )
         return jsonify({"message": response.message})
     except grpc.RpcError as e:
         return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
 
 
-@app.route('/chat-service/private/<receiver_id>', methods=['POST'])
+@ app.route('/chat-service/private/<receiver_id>', methods=['POST'])
 def get_private_chat_history(receiver_id):
     data = request.get_json()
     try:
-        chat_service_stub = get_chat_service_stub()
-        response = chat_service_stub.GetPrivateChatHistory(
-            chat_pb2.GetPrivateChatHistoryRequest(sender_id=data["sender_id"], receiver_id=receiver_id), timeout=5.0)
+        chat_service_stub, chat_service_address = get_chat_service_stub()
+        response = retry.retry_request_with_circuit_breaker(
+            stub_method=chat_service_stub.GetPrivateChatHistory,
+            request_data=chat_pb2.GetPrivateChatHistoryRequest(
+                sender_id=data["sender_id"], receiver_id=receiver_id),
+            service_address=chat_service_address,
+            circuit_breaker=chat_service_circuit_breaker,
+            logger=logger
+        )
         messages = []
         for message in response.messages:
             messages.append({
@@ -161,45 +145,60 @@ def get_private_chat_history(receiver_id):
         return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
 
 
-@app.route('/chat-service/rooms/create', methods=['POST'])
+@ app.route('/chat-service/rooms/create', methods=['POST'])
 def create_room():
     data = request.get_json()
     try:
-        chat_service_stub = get_chat_service_stub()
-        response = chat_service_stub.CreateRoom(
-            chat_pb2.CreateRoomRequest(
+        chat_service_stub, chat_service_address = get_chat_service_stub()
+        response = retry.retry_request_with_circuit_breaker(
+            stub_method=chat_service_stub.CreateRoom,
+            request_data=chat_pb2.CreateRoomRequest(
                 room_name=data["room_name"],
                 creator_id=data["creator_id"],
                 members_ids=data["members_ids"]
-            ), timeout=5.0)
+            ),
+            service_address=chat_service_address,
+            circuit_breaker=chat_service_circuit_breaker,
+            logger=logger
+        )
         return jsonify({"message": response.message})
     except grpc.RpcError as e:
         return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
 
 
-@app.route('/chat-service/rooms/<room_id>/add', methods=['PUT'])
+@ app.route('/chat-service/rooms/<room_id>/add', methods=['PUT'])
 def add_room_member(room_id):
     data = request.get_json()
     try:
-        chat_service_stub = get_chat_service_stub()
-        response = chat_service_stub.AddUserToRoom(
-            chat_pb2.AddUserToRoomRequest(
+        chat_service_stub, chat_service_address = get_chat_service_stub()
+        response = retry.retry_request_with_circuit_breaker(
+            stub_method=chat_service_stub.AddUserToRoom,
+            request_data=chat_pb2.AddUserToRoomRequest(
                 room_id=room_id,
                 user_id=data["user_id"]
-            ), timeout=5.0)
+            ),
+            service_address=chat_service_address,
+            circuit_breaker=chat_service_circuit_breaker,
+            logger=logger
+        )
         return jsonify({"message": response.message})
     except grpc.RpcError as e:
         return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
 
 
-@app.route('/chat-service/rooms/<room_id>', methods=['GET'])
+@ app.route('/chat-service/rooms/<room_id>', methods=['GET'])
 def get_room_chat_history(room_id):
     try:
-        chat_service_stub = get_chat_service_stub()
-        response = chat_service_stub.GetRoomHistory(
-            chat_pb2.GetRoomHistoryRequest(
+        chat_service_stub, chat_service_address = get_chat_service_stub()
+        response = retry.retry_request_with_circuit_breaker(
+            stub_method=chat_service_stub.GetRoomHistory,
+            request_data=chat_pb2.GetRoomHistoryRequest(
                 room_id=room_id
-            ), timeout=5.0)
+            ),
+            service_address=chat_service_address,
+            circuit_breaker=chat_service_circuit_breaker,
+            logger=logger
+        )
         messages = []
         for message in response.messages:
             messages.append({
@@ -216,22 +215,27 @@ def get_room_chat_history(room_id):
         return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
 
 
-@app.route('/chat-service/rooms/<room_id>/leave', methods=['PUT'])
+@ app.route('/chat-service/rooms/<room_id>/leave', methods=['PUT'])
 def leave_room(room_id):
     data = request.get_json()
     try:
-        chat_service_stub = get_chat_service_stub()
-        response = chat_service_stub.LeaveRoom(
-            chat_pb2.LeaveRoomRequest(
+        chat_service_stub, chat_service_address = get_chat_service_stub()
+        response = retry.retry_request_with_circuit_breaker(
+            stub_method=chat_service_stub.LeaveRoom,
+            request_data=chat_pb2.LeaveRoomRequest(
                 room_id=room_id,
                 user_id=data["user_id"]
-            ), timeout=5.0)
+            ),
+            service_address=chat_service_address,
+            circuit_breaker=chat_service_circuit_breaker,
+            logger=logger
+        )
         return jsonify({"message": response.message})
     except grpc.RpcError as e:
         return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
 
 
-@app.route('/status', methods=['GET'])
+@ app.route('/status', methods=['GET'])
 def gateway_status():
     uptime = time.time() - start_time
 
@@ -243,12 +247,12 @@ def gateway_status():
     return jsonify(status), 200
 
 
-@app.route('/discovery/status', methods=['GET'])
+@ app.route('/discovery/status', methods=['GET'])
 def discovery_status():
     return jsonify({"status": registry_client.status()})
 
 
-@app.route('/user-service/status', methods=['GET'])
+@ app.route('/user-service/status', methods=['GET'])
 def user_service_status():
     statuses = [user_service_address for user_service_address in user_service_addresses if health_checker.check_grpc_health(
         user_service_address)]
@@ -266,8 +270,16 @@ def chat_service_status():
 def timeout():
     empty = user_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
     try:
-        user_service_stub = get_user_service_stub()
-        user_service_stub.Timeout(empty, timeout=5.0)
+        user_service_stub, user_service_address = get_user_service_stub()
+        retry.retry_request_with_circuit_breaker(
+            stub_method=user_service_stub.Timeout,
+            request_data=empty,
+            service_address=user_service_address,
+            circuit_breaker=user_service_circuit_breaker,
+            logger=logger
+        )
+        return jsonify({"message": "Test Timeout"})
+
     except grpc.RpcError as e:
         return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
 
