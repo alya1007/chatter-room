@@ -57,8 +57,8 @@ services:
       context: ./src/ChatService
     container_name: chat-service
     ports:
-      - "5001:5001"
-      - "5008:5008"
+      - "50033:50033"
+      - "50088:50088"
     depends_on:
       - service-discovery
       - user-service
@@ -70,9 +70,11 @@ services:
       - CHAT_CONNECTION_STRING=${CONNECTION_STRING}
       - CHAT_DATABASE_NAME=${CHAT_DATABASE_NAME}
       - SERVICE_DISCOVERY_ADDRESS=${SERVICE_DISCOVERY_ADDRESS}
-      - PORT=5001
+      - PORT=50033
       - SERVICE_NAME=chat_service
       - USER_SERVICE_NAME=user_service
+      - GRPC_PORT=50033
+      - WEBSOCKET_PORT=50088
 
   gateway:
     build:
