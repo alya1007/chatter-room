@@ -32,13 +32,17 @@ class ServiceRegistryServicer(service_registry_pb2_grpc.ServiceRegistryServicer)
                 message="service_name and service_url are required"
             )
 
-        # Insert the new service if it does not already exist
-        collection.insert_one({
-            'service_name': service_name,
-            'service_url': service_url,
-            'registered_at': datetime.datetime.utcnow(),
-            'last_seen_at': datetime.datetime.utcnow()
-        })
+        collection.update_one(
+            {"service_url": service_url},
+            {
+                "$set": {
+                    "service_name": service_name,
+                    "registered_at": datetime.datetime.utcnow(),
+                    "last_seen_at": datetime.datetime.utcnow(),
+                }
+            },
+            upsert=True
+        )
 
         return service_registry_pb2.RegisterServiceResponse(
             success=True,
