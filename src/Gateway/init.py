@@ -24,7 +24,7 @@ class Initializer:
             host=self.redis_host, port=self.redis_port, db=0, decode_responses=True)
         self.app = Flask(__name__)
         self.limiter = Limiter(get_remote_address, app=self.app, default_limits=[
-            "5 per minute"])
+            "500 per minute"])
         self.registry_client = src.ServiceRegistryClient(
             self.discovery_address)
         self.user_service_addresses = self.registry_client.discover_services(

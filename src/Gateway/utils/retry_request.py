@@ -12,7 +12,8 @@ def retry_request_with_circuit_breaker(
             return response  # Success on first try or retry
         except grpc.RpcError as e:
             recoverable_errors = [
-                grpc.StatusCode.DEADLINE_EXCEEDED
+                grpc.StatusCode.DEADLINE_EXCEEDED,
+                grpc.StatusCode.UNAVAILABLE,
             ]
 
             if e.code() not in recoverable_errors:
