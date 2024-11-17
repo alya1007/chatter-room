@@ -9,25 +9,26 @@ import utils.status_codes_translator as code_t  # type: ignore
 import utils.retry_request as retry  # type: ignore
 import time
 import utils.health_checker as health_checker  # type: ignore
-from init import initialize  # type: ignore
+from init import Initializer  # type: ignore
 
 
 start_time = time.time()
 
 
-app, redis_client, user_service_load_balancer, chat_service_load_balancer, chat_service_circuit_breaker, user_service_circuit_breaker, limiter, logger, registry_client, user_service_addresses, chat_service_addresses = initialize()
+context = Initializer()
+app = context.app
 
 
 def get_user_service_stub():
-    user_service_address = user_service_load_balancer.get_server()
-    logger.info("Request to user service: ", user_service_address)
+    user_service_address = context.user_service_load_balancer.get_server()
+    context.logger.info("Request to user service: ", user_service_address)
     user_channel = grpc.insecure_channel(user_service_address)
     return user_pb2_grpc.UserServiceManagerStub(user_channel), user_service_address
 
 
 def get_chat_service_stub():
-    chat_service_address = chat_service_load_balancer.get_server()
-    logger.info("Request to chat service: ", chat_service_address)
+    chat_service_address = context.chat_service_load_balancer.get_server()
+    context.logger.info("Request to chat service: ", chat_service_address)
     chat_channel = grpc.insecure_channel(chat_service_address)
     return chat_pb2_grpc.ChatServiceManagerStub(chat_channel), chat_service_address
 
@@ -42,8 +43,8 @@ def register_user():
             request_data=user_pb2.RegisterUserRequest(
                 username=data["username"], email=data["email"], password=data["password"]),
             service_address=user_service_address,
-            circuit_breaker=user_service_circuit_breaker,
-            logger=logger
+            circuit_breaker=context.user_service_circuit_breaker,
+            logger=context.logger
         )
         return jsonify({"message": response.message})
     except grpc.RpcError as e:
@@ -60,8 +61,8 @@ def login_user():
             request_data=user_pb2.LoginUserRequest(
                 email=data["email"], password=data["password"]),
             service_address=user_service_address,
-            circuit_breaker=user_service_circuit_breaker,
-            logger=logger
+            circuit_breaker=context.user_service_circuit_breaker,
+            logger=context.logger
         )
         return jsonify({"token": response.token})
     except grpc.RpcError as e:
@@ -72,7 +73,7 @@ def login_user():
 def get_user_profile(user_id):
     cache_key = f"user_profile:{user_id}"
 
-    cached_profile = redis_client.get(cache_key)
+    cached_profile = context.redis_client.get(cache_key)
     if cached_profile:
         return json.loads(cached_profile)
 
@@ -85,8 +86,8 @@ def get_user_profile(user_id):
                 user_id=user_id
             ),
             service_address=user_service_address,
-            circuit_breaker=user_service_circuit_breaker,
-            logger=logger
+            circuit_breaker=context.user_service_circuit_breaker,
+            logger=context.logger
         )
 
         user_profile = {
@@ -94,7 +95,7 @@ def get_user_profile(user_id):
             "email": response.email
         }
 
-        redis_client.setex(cache_key, 60, json.dumps(user_profile))
+        context.redis_client.setex(cache_key, 60, json.dumps(user_profile))
         return jsonify(user_profile)
     except grpc.RpcError as e:
         return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
@@ -110,8 +111,8 @@ def send_private_message():
             request_data=chat_pb2.SendPrivateMessageRequest(
                 sender_id=data["sender_id"], receiver_id=data["receiver_id"], message=data["message"]),
             service_address=chat_service_address,
-            circuit_breaker=chat_service_circuit_breaker,
-            logger=logger
+            circuit_breaker=context.chat_service_circuit_breaker,
+            logger=context.logger
         )
         return jsonify({"message": response.message})
     except grpc.RpcError as e:
@@ -128,8 +129,8 @@ def get_private_chat_history(receiver_id):
             request_data=chat_pb2.GetPrivateChatHistoryRequest(
                 sender_id=data["sender_id"], receiver_id=receiver_id),
             service_address=chat_service_address,
-            circuit_breaker=chat_service_circuit_breaker,
-            logger=logger
+            circuit_breaker=context.chat_service_circuit_breaker,
+            logger=context.logger
         )
         messages = []
         for message in response.messages:
@@ -158,8 +159,8 @@ def create_room():
                 members_ids=data["members_ids"]
             ),
             service_address=chat_service_address,
-            circuit_breaker=chat_service_circuit_breaker,
-            logger=logger
+            circuit_breaker=context.chat_service_circuit_breaker,
+            logger=context.logger
         )
         return jsonify({"message": response.message})
     except grpc.RpcError as e:
@@ -178,8 +179,8 @@ def add_room_member(room_id):
                 user_id=data["user_id"]
             ),
             service_address=chat_service_address,
-            circuit_breaker=chat_service_circuit_breaker,
-            logger=logger
+            circuit_breaker=context.chat_service_circuit_breaker,
+            logger=context.logger
         )
         return jsonify({"message": response.message})
     except grpc.RpcError as e:
@@ -196,8 +197,8 @@ def get_room_chat_history(room_id):
                 room_id=room_id
             ),
             service_address=chat_service_address,
-            circuit_breaker=chat_service_circuit_breaker,
-            logger=logger
+            circuit_breaker=context.chat_service_circuit_breaker,
+            logger=context.logger
         )
         messages = []
         for message in response.messages:
@@ -227,8 +228,8 @@ def leave_room(room_id):
                 user_id=data["user_id"]
             ),
             service_address=chat_service_address,
-            circuit_breaker=chat_service_circuit_breaker,
-            logger=logger
+            circuit_breaker=context.chat_service_circuit_breaker,
+            logger=context.logger
         )
         return jsonify({"message": response.message})
     except grpc.RpcError as e:
@@ -249,19 +250,19 @@ def gateway_status():
 
 @ app.route('/discovery/status', methods=['GET'])
 def discovery_status():
-    return jsonify({"status": registry_client.status()})
+    return jsonify({"status": context.registry_client.status()})
 
 
 @ app.route('/user-service/status', methods=['GET'])
 def user_service_status():
-    statuses = [user_service_address for user_service_address in user_service_addresses if health_checker.check_grpc_health(
+    statuses = [user_service_address for user_service_address in context.user_service_addresses if health_checker.check_grpc_health(
         user_service_address)]
     return jsonify({"status": statuses}) if statuses else jsonify({"status": "unhealthy"})
 
 
 @ app.route('/chat-service/status', methods=['GET'])
 def chat_service_status():
-    statuses = [chat_service_address for chat_service_address in chat_service_addresses if health_checker.check_grpc_health(
+    statuses = [chat_service_address for chat_service_address in context.chat_service_addresses if health_checker.check_grpc_health(
         chat_service_address)]
     return jsonify({"status": statuses}) if statuses else jsonify({"status": "unhealthy"})
 
@@ -275,8 +276,8 @@ def timeout():
             stub_method=user_service_stub.Timeout,
             request_data=empty,
             service_address=user_service_address,
-            circuit_breaker=user_service_circuit_breaker,
-            logger=logger
+            circuit_breaker=context.user_service_circuit_breaker,
+            logger=context.logger
         )
         return jsonify({"message": "Test Timeout"})
 
