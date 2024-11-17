@@ -33,8 +33,8 @@ services:
       context: ./src/UserService
     container_name: user-service
     ports:
-      - "50022:50022"
-      - "50077:50077"
+      - "50000:50000"
+      - "51000:51000"
     depends_on:
       - redis
       - service-discovery
@@ -46,23 +46,24 @@ services:
       - USER_CONNECTION_STRING=${CONNECTION_STRING}
       - USER_DATABASE_NAME=${USER_DATABASE_NAME}
       - SERVICE_DISCOVERY_ADDRESS=${SERVICE_DISCOVERY_ADDRESS}
-      - SERVICE_URL=user-service:50022
+      - SERVICE_URL=user-service:50000
       - SERVICE_NAME=user_service
       - JWT_SECRET=${JWT_SECRET}
-      - GRPC_PORT=50022
-      - WEBSOCKET_PORT=50077
+      - GRPC_PORT=50000
+      - WEBSOCKET_PORT=51000
 
   user-service2:
     build:
       context: ./src/UserService
     container_name: user-service2
     ports:
-      - "50023:50023"
-      - "50078:50078"
+      - "50001:50001"
+      - "51001:51001"
     depends_on:
       - redis
       - service-discovery
       - mongodb
+      - user-service
     networks:
       - app-network
     environment:
@@ -70,43 +71,44 @@ services:
       - USER_CONNECTION_STRING=${CONNECTION_STRING}
       - USER_DATABASE_NAME=${USER_DATABASE_NAME}
       - SERVICE_DISCOVERY_ADDRESS=${SERVICE_DISCOVERY_ADDRESS}
-      - SERVICE_URL=user-service2:50023
+      - SERVICE_URL=user-service2:50001
       - SERVICE_NAME=user_service
       - JWT_SECRET=${JWT_SECRET}
-      - GRPC_PORT=50023
-      - WEBSOCKET_PORT=50078
+      - GRPC_PORT=50001
+      - WEBSOCKET_PORT=51001
 
-  # user-service3:
-  #   build:
-  #     context: ./src/UserService
-  #   container_name: user-service3
-  #   ports:
-  #     - "50024:50024"
-  #     - "50079:50079"
-  #   depends_on:
-  #     - redis
-  #     - service-discovery
-  #     - mongodb
-  #   networks:
-  #     - app-network
-  #   environment:
-  #     - ASPNETCORE_ENVIRONMENT=Development
-  #     - USER_CONNECTION_STRING=${CONNECTION_STRING}
-  #     - USER_DATABASE_NAME=${USER_DATABASE_NAME}
-  #     - SERVICE_DISCOVERY_ADDRESS=${SERVICE_DISCOVERY_ADDRESS}
-  #     - PORT=50024
-  #     - SERVICE_NAME=user_service
-  #     - JWT_SECRET=${JWT_SECRET}
-  #     - GRPC_PORT=50024
-  #     - WEBSOCKET_PORT=50079
+  user-service3:
+    build:
+      context: ./src/UserService
+    container_name: user-service3
+    ports:
+      - "50002:50002"
+      - "51002:51002"
+    depends_on:
+      - redis
+      - service-discovery
+      - mongodb
+      - user-service2
+    networks:
+      - app-network
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - USER_CONNECTION_STRING=${CONNECTION_STRING}
+      - USER_DATABASE_NAME=${USER_DATABASE_NAME}
+      - SERVICE_DISCOVERY_ADDRESS=${SERVICE_DISCOVERY_ADDRESS}
+      - SERVICE_URL=user-service3:50002
+      - SERVICE_NAME=user_service
+      - JWT_SECRET=${JWT_SECRET}
+      - GRPC_PORT=50002
+      - WEBSOCKET_PORT=51002
 
   chat-service:
     build:
       context: ./src/ChatService
     container_name: chat-service
     ports:
-      - "50033:50033"
-      - "50088:50088"
+      - "60000:60000"
+      - "61000:61000"
     depends_on:
       - service-discovery
       - user-service
@@ -118,22 +120,23 @@ services:
       - CHAT_CONNECTION_STRING=${CONNECTION_STRING}
       - CHAT_DATABASE_NAME=${CHAT_DATABASE_NAME}
       - SERVICE_DISCOVERY_ADDRESS=${SERVICE_DISCOVERY_ADDRESS}
-      - SERVICE_URL=chat-service:50033
+      - SERVICE_URL=chat-service:60000
       - SERVICE_NAME=chat_service
       - USER_SERVICE_NAME=user_service
-      - GRPC_PORT=50033
-      - WEBSOCKET_PORT=50088
+      - GRPC_PORT=60000
+      - WEBSOCKET_PORT=61000
 
   chat-service2:
     build:
       context: ./src/ChatService
     container_name: chat-service2
     ports:
-      - "50034:50034"
-      - "50089:50089"
+      - "60001:60001"
+      - "61001:61001"
     depends_on:
       - service-discovery
       - user-service
+      - chat-service
       - mongodb
     networks:
       - app-network
@@ -142,11 +145,36 @@ services:
       - CHAT_CONNECTION_STRING=${CONNECTION_STRING}
       - CHAT_DATABASE_NAME=${CHAT_DATABASE_NAME}
       - SERVICE_DISCOVERY_ADDRESS=${SERVICE_DISCOVERY_ADDRESS}
-      - SERVICE_URL=chat-service2:50034
+      - SERVICE_URL=chat-service2:60001
       - SERVICE_NAME=chat_service
       - USER_SERVICE_NAME=user_service
-      - GRPC_PORT=50034
-      - WEBSOCKET_PORT=50089
+      - GRPC_PORT=60001
+      - WEBSOCKET_PORT=61001
+
+  chat-service3:
+    build:
+      context: ./src/ChatService
+    container_name: chat-service3
+    ports:
+      - "60002:60002"
+      - "61002:61002"
+    depends_on:
+      - service-discovery
+      - user-service
+      - chat-service2
+      - mongodb
+    networks:
+      - app-network
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - CHAT_CONNECTION_STRING=${CONNECTION_STRING}
+      - CHAT_DATABASE_NAME=${CHAT_DATABASE_NAME}
+      - SERVICE_DISCOVERY_ADDRESS=${SERVICE_DISCOVERY_ADDRESS}
+      - SERVICE_URL=chat-service3:60002
+      - SERVICE_NAME=chat_service
+      - USER_SERVICE_NAME=user_service
+      - GRPC_PORT=60002
+      - WEBSOCKET_PORT=61002
 
   gateway:
     build:
@@ -158,7 +186,10 @@ services:
       - service-discovery
       - user-service
       - user-service2
+      - user-service3
       - chat-service
+      - chat-service2
+      - chat-service3
       - redis
       - mongodb
     networks:
