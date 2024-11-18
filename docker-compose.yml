@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  ##### SERVICE DISCOVERY #####
   service-discovery:
     build:
       context: ./src/ServiceDiscovery
@@ -11,13 +12,81 @@ services:
       - app-network
     env_file: ./src/ServiceDiscovery/.env
 
+  ##### ELK STACK #####
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
+    container_name: elasticsearch
+    restart: unless-stopped
+    volumes:
+      - elasticsearch:/usr/share/elasticsearch/data # mounting elasticsearch data
+      - ./elk-config/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml # mounting elasticsearch config
+    ports:
+      - 9200:9200
+      - 9300:9300
+    mem_limit: 2g
+    environment:
+      - discovery.type=single-node
+      - cluster.name=elasticsearch
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"] # curl -f http://localhost
+      start_period: 30s
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.15.3
+    container_name: logstash
+    restart: unless-stopped
+    volumes:
+      - ./elk-config/logstash/pipeline:/usr/share/logstash/pipeline
+      - ./elk-config/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ls_data:/usr/share/logstash/data
+    command: logstash -f /usr/share/logstash/pipeline/logstash.conf
+    mem_limit: 1g
+    ports:
+      - 5044:5044 # Input
+      - 9600:9600
+      - "12201:12201/udp" # GELF
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.15.3
+    container_name: kibana
+    restart: unless-stopped
+    volumes:
+      - ./elk-config/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
+      - kb_data:/usr/share/kibana/data
+    mem_limit: 1g
+    ports:
+      - 5601:5601
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12201"
+        tag: kibana
+
+  ##### REDIS #####
   redis:
     image: redis:alpine
     ports:
       - "6379:6379"
     networks:
       - app-network
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12201"
+        tag: redis
+    volumes:
+      - redis-data:/data
 
+  ##### MONGODB #####
   mongodb:
     image: mongo:latest
     container_name: mongodb
@@ -25,9 +94,15 @@ services:
       - "27017:27017"
     networks:
       - app-network
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12201"
+        tag: mongodb
     volumes:
       - mongodb-data:/data/db
 
+  ##### USER SERVICES #####
   user-service:
     build:
       context: ./src/UserService
@@ -39,6 +114,9 @@ services:
       - redis
       - service-discovery
       - mongodb
+      - elasticsearch
+      - kibana
+      - logstash
     networks:
       - app-network
     environment:
@@ -51,6 +129,11 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - GRPC_PORT=50000
       - WEBSOCKET_PORT=51000
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12201"
+        tag: user-service
 
   user-service2:
     build:
@@ -76,6 +159,11 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - GRPC_PORT=50001
       - WEBSOCKET_PORT=51001
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12201"
+        tag: user-service2
 
   user-service3:
     build:
@@ -101,7 +189,13 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - GRPC_PORT=50002
       - WEBSOCKET_PORT=51002
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12201"
+        tag: user-service3
 
+  ##### CHAT SERVICES #####
   chat-service:
     build:
       context: ./src/ChatService
@@ -125,6 +219,11 @@ services:
       - USER_SERVICE_NAME=user_service
       - GRPC_PORT=60000
       - WEBSOCKET_PORT=61000
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12201"
+        tag: chat-service
 
   chat-service2:
     build:
@@ -150,6 +249,11 @@ services:
       - USER_SERVICE_NAME=user_service
       - GRPC_PORT=60001
       - WEBSOCKET_PORT=61001
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12201"
+        tag: chat-service2
 
   chat-service3:
     build:
@@ -175,7 +279,13 @@ services:
       - USER_SERVICE_NAME=user_service
       - GRPC_PORT=60002
       - WEBSOCKET_PORT=61002
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12201"
+        tag: chat-service3
 
+  ##### GATEWAY #####
   gateway:
     build:
       context: ./src/Gateway
@@ -195,6 +305,11 @@ services:
     networks:
       - app-network
     env_file: ./src/Gateway/.env
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12201"
+        tag: gateway
 
 networks:
   app-network:
@@ -202,3 +317,7 @@ networks:
 
 volumes:
   mongodb-data:
+  redis-data:
+  elasticsearch:
+  ls_data:
+  kb_data:
