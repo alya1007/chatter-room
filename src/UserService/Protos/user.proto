@@ -8,6 +8,7 @@ service UserServiceManager {
     rpc RegisterUser (RegisterUserRequest) returns (RegisterUserResponse);
     rpc LoginUser (LoginUserRequest) returns (LoginUserResponse);
     rpc GetUserProfile (GetUserProfileRequest) returns (GetUserProfileResponse);
+    rpc DeleteUser (DeleteUserRequest) returns (DeleteUserResponse);
     rpc Timeout (google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 
@@ -19,6 +20,7 @@ message RegisterUserRequest {
 
 message RegisterUserResponse {
     string message = 1;
+    string user_id = 2;
 }
 
 message LoginUserRequest {
@@ -37,4 +39,12 @@ message GetUserProfileRequest {
 message GetUserProfileResponse {
     string username = 1;
     string email = 2;
+}
+
+message DeleteUserRequest {
+    string user_id = 1;
+}
+
+message DeleteUserResponse {
+    string message = 1;
 }

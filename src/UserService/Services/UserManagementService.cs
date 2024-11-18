@@ -38,7 +38,12 @@ public class UserManagementService : UserServiceManager.UserServiceManagerBase
 
             await _dbContext.Users.InsertOneAsync(user);
 
-            return new RegisterUserResponse { Message = $"User {user.Username} registered successfully" };
+            return new RegisterUserResponse
+            {
+                Message = $"User {user.Username} registered successfully",
+                UserId = user.Id.ToString()
+            };
+
         }
         catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
         {
@@ -112,6 +117,33 @@ public class UserManagementService : UserServiceManager.UserServiceManagerBase
         catch (Exception e)
         {
             throw new RpcException(new Status(StatusCode.Internal, $"An error occurred while fetching user profile: {e.Message}"));
+        }
+    }
+
+    public override Task<DeleteUserResponse> DeleteUser(DeleteUserRequest request, ServerCallContext context)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.UserId))
+            {
+                throw new RpcException(new Status(StatusCode.InvalidArgument, "User ID is required."));
+            }
+
+            var result = _dbContext.Users.DeleteOne(u => u.Id == request.UserId);
+            if (result.DeletedCount == 0)
+            {
+                throw new RpcException(new Status(StatusCode.NotFound, "User not found"));
+            }
+
+            return Task.FromResult(new DeleteUserResponse { Message = "User deleted successfully" });
+        }
+        catch (RpcException)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            throw new RpcException(new Status(StatusCode.Internal, "An error occurred while deleting the user"));
         }
     }
 
