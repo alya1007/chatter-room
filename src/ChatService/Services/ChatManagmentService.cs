@@ -231,4 +231,37 @@ public class ChatManagementService : ChatServiceManager.ChatServiceManagerBase
             throw new RpcException(new Status(StatusCode.Internal, "An error occurred while leaving the room."));
         }
     }
+
+    public override async Task<AddUserResponse> AddUser(AddUserRequest request, ServerCallContext context)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.UserId))
+            {
+                throw new RpcException(new Status(StatusCode.InvalidArgument, "Id is required."));
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Username))
+            {
+                throw new RpcException(new Status(StatusCode.InvalidArgument, "Username is required."));
+            }
+
+            var user = new UserModel
+            {
+                Id = request.UserId,
+                Username = request.Username
+            };
+
+            await _dbContext.Users.InsertOneAsync(user);
+            return new AddUserResponse { Message = $"User {user.Username} added successfully" };
+        }
+        catch (RpcException)
+        {
+            throw;
+        }
+        catch (System.Exception e)
+        {
+            throw new RpcException(new Status(StatusCode.Internal, $"An error occurred while adding the user: {e.Message}"));
+        }
+    }
 }
