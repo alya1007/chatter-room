@@ -11,6 +11,7 @@ service ChatServiceManager {
   rpc AddUserToRoom (AddUserToRoomRequest) returns (AddUserToRoomResponse);
   rpc GetRoomHistory (GetRoomHistoryRequest) returns (GetRoomHistoryResponse);
   rpc LeaveRoom (LeaveRoomRequest) returns (LeaveRoomResponse);
+  rpc AddUser (AddUserRequest) returns (AddUserResponse);
 }
 
 message ChatMessageProto {
@@ -82,5 +83,14 @@ message LeaveRoomRequest {
 }
 
 message LeaveRoomResponse {
+  string message = 1;
+}
+
+message AddUserRequest {
+  string user_id = 1;
+  string username = 2;
+}
+
+message AddUserResponse {
   string message = 1;
 }

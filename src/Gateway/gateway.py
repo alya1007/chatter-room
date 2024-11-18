@@ -23,6 +23,7 @@ app = context.app
 def register_user():
     data = request.get_json()
     try:
+        # Step 1: Register user in User Service
         response = retry.retry_request_with_circuit_breaker(
             stub_method=lambda channel, request, timeout: user_pb2_grpc.UserServiceManagerStub(channel).RegisterUser(
                 request, timeout=timeout),
@@ -32,9 +33,56 @@ def register_user():
             circuit_breaker=context.user_service_circuit_breaker,
             logger=context.logger
         )
-        return jsonify({"message": response.message})
+        response_user_id = response.user_id
+
     except grpc.RpcError as e:
+        # register fails
         return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
+
+    except Exception as e:
+        context.logger.error(f"User Service registration failed: {str(e)}")
+        return {"status": "failure", "message": "Failed to register user in User Service"}
+
+    try:
+        # Step 2: Add user to Chat Service
+        retry.retry_request_with_circuit_breaker(
+            stub_method=lambda channel, request, timeout: chat_pb2_grpc.ChatServiceManagerStub(channel).AddUser(
+                request, timeout=timeout),
+            request_data=chat_pb2.AddUserRequest(
+                user_id=response_user_id,
+                username=data["username"]
+            ),
+            load_balancer=context.chat_service_load_balancer,
+            circuit_breaker=context.chat_service_circuit_breaker,
+            logger=context.logger
+        )
+    except (grpc.RpcError, Exception) as e:
+        # roll back User Service
+        context.logger.error(
+            "Failed to add user to chat service: " + str(e))
+        context.logger.info("Rolling back user creation")
+        try:
+            rollback_response = retry.retry_request_with_circuit_breaker(
+                stub_method=lambda channel, request, timeout: user_pb2_grpc.UserServiceManagerStub(channel).DeleteUser(
+                    request, timeout=timeout),
+                request_data=user_pb2.DeleteUserRequest(
+                    user_id=response_user_id
+                ),
+                load_balancer=context.user_service_load_balancer,
+                circuit_breaker=context.user_service_circuit_breaker,
+                logger=context.logger
+            )
+            context.logger.info("User rolled back successfully: " +
+                                rollback_response.message)
+        except (grpc.RpcError, Exception) as rollback_error:
+            context.logger.error(
+                "Failed to roll back user: " + str(rollback_error))
+            return {"status": "failure", "message": "Failed to propagate user to Chat Service, and rollback also failed"}
+
+        return {"status": "failure", "message": "Failed to propagate user to Chat Service"}
+
+    # Step 3: If everything succeeds, return success
+    return {"status": "success", "message": "User registered successfully"}
 
 
 @ app.route('/user-service/login', methods=['POST'])
@@ -82,6 +130,25 @@ def get_user_profile(user_id):
 
         context.redis_client.setex(cache_key, 60, json.dumps(user_profile))
         return jsonify(user_profile)
+    except grpc.RpcError as e:
+        return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
+
+
+@ app.route('/user-service/users/delete', methods=['DELETE'])
+def delete_user():
+    data = request.get_json()
+    try:
+        response = retry.retry_request_with_circuit_breaker(
+            stub_method=lambda channel, request, timeout: user_pb2_grpc.UserServiceManagerStub(channel).DeleteUser(
+                request, timeout=timeout),
+            request_data=user_pb2.DeleteUserRequest(
+                user_id=data["user_id"]
+            ),
+            load_balancer=context.user_service_load_balancer,
+            circuit_breaker=context.user_service_circuit_breaker,
+            logger=context.logger
+        )
+        return jsonify({"message": response.message})
     except grpc.RpcError as e:
         return jsonify({"error": e.details()}), code_t.grpc_status_to_http(e.code())
 

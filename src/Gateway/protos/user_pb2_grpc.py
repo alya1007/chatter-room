@@ -50,6 +50,11 @@ class UserServiceManagerStub(object):
                 request_serializer=protos_dot_user__pb2.GetUserProfileRequest.SerializeToString,
                 response_deserializer=protos_dot_user__pb2.GetUserProfileResponse.FromString,
                 _registered_method=True)
+        self.DeleteUser = channel.unary_unary(
+                '/UserServiceManager/DeleteUser',
+                request_serializer=protos_dot_user__pb2.DeleteUserRequest.SerializeToString,
+                response_deserializer=protos_dot_user__pb2.DeleteUserResponse.FromString,
+                _registered_method=True)
         self.Timeout = channel.unary_unary(
                 '/UserServiceManager/Timeout',
                 request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
@@ -78,6 +83,12 @@ class UserServiceManagerServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def DeleteUser(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def Timeout(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -101,6 +112,11 @@ def add_UserServiceManagerServicer_to_server(servicer, server):
                     servicer.GetUserProfile,
                     request_deserializer=protos_dot_user__pb2.GetUserProfileRequest.FromString,
                     response_serializer=protos_dot_user__pb2.GetUserProfileResponse.SerializeToString,
+            ),
+            'DeleteUser': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeleteUser,
+                    request_deserializer=protos_dot_user__pb2.DeleteUserRequest.FromString,
+                    response_serializer=protos_dot_user__pb2.DeleteUserResponse.SerializeToString,
             ),
             'Timeout': grpc.unary_unary_rpc_method_handler(
                     servicer.Timeout,
@@ -189,6 +205,33 @@ class UserServiceManager(object):
             '/UserServiceManager/GetUserProfile',
             protos_dot_user__pb2.GetUserProfileRequest.SerializeToString,
             protos_dot_user__pb2.GetUserProfileResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def DeleteUser(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/UserServiceManager/DeleteUser',
+            protos_dot_user__pb2.DeleteUserRequest.SerializeToString,
+            protos_dot_user__pb2.DeleteUserResponse.FromString,
             options,
             channel_credentials,
             insecure,
