@@ -2,38 +2,47 @@ import grpc  # type: ignore
 
 
 def retry_request_with_circuit_breaker(
-    stub_method, request_data, service_address, circuit_breaker, logger, max_retries=3
+    stub_method, request_data, load_balancer, circuit_breaker, logger, max_retries=3
 ):
-    retries = 0
+    failed_servers = set()
 
-    while retries < max_retries:
-        try:
-            response = stub_method(request_data, timeout=5.0)
-            return response  # Success on first try or retry
-        except grpc.RpcError as e:
-            recoverable_errors = [
-                grpc.StatusCode.DEADLINE_EXCEEDED,
-                grpc.StatusCode.UNAVAILABLE,
-            ]
+    while True:
+        service_address = load_balancer.get_server()
 
-            if e.code() not in recoverable_errors:
-                raise e
+        if service_address in failed_servers:
+            logger.info("Skipping " + service_address +
+                        " because it is marked as unavailable.")
+            continue  # Skip servers already marked as unavailable
 
-            logger.error("Attempt " + str(retries + 1) + "failed for " +
-                         service_address + ": " + e.details() + "(gRPC Code: " + str(e.code()) + ")")
+        retries = 0
 
-            # Record the failure in the Circuit Breaker
-            circuit_opened = not circuit_breaker.record_failure(
-                service_address)
+        while retries < max_retries:
+            try:
+                # Attempt the request
+                channel = grpc.insecure_channel(service_address)
+                response = stub_method(channel, request_data, timeout=5.0)
+                logger.info(f"Request made to: {service_address}")
+                return response  # Success on first try or retry
+            except grpc.RpcError as e:
+                recoverable_errors = [
+                    grpc.StatusCode.DEADLINE_EXCEEDED,
+                    grpc.StatusCode.UNAVAILABLE,
+                ]
 
-            if circuit_opened:
-                logger.error(service_address +
-                             "is now unavailable due to repeated failures.")
-                raise Exception(f"{service_address} is now unavailable.")
+                if e.code() not in recoverable_errors:
+                    raise e
+                logger.error("Attempt: " + str(retries + 1) +
+                             " - failed on " + service_address + " with error: " + str(e.details()))
+                retries += 1
 
-            retries += 1
+                # Mark server as failed if max retries are reached
+                if retries >= max_retries:
+                    logger.error("Server " + service_address +
+                                 " marked as unavailable after repeated failures.")
+                    circuit_breaker.record_failure(service_address)
+                    failed_servers.add(service_address)
 
-            if retries >= max_retries:
-                logger.error("All " + str(max_retries) + "retries failed for " + service_address +
-                             ". Last error: " + e.details() + "(gRPC Code: " + str(e.code()) + ")")
-                raise e  # Re-raise the original exception
+        # If the loop exits, move to the next server
+        if len(failed_servers) >= len(load_balancer.servers):
+            logger.error("All servers failed after retries.")
+            raise Exception("All servers failed after retries.")

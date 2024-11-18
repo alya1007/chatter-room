@@ -19,30 +19,16 @@ context = Initializer()
 app = context.app
 
 
-def get_user_service_stub():
-    user_service_address = context.user_service_load_balancer.get_server()
-    context.logger.info("Request to user service: ", user_service_address)
-    user_channel = grpc.insecure_channel(user_service_address)
-    return user_pb2_grpc.UserServiceManagerStub(user_channel), user_service_address
-
-
-def get_chat_service_stub():
-    chat_service_address = context.chat_service_load_balancer.get_server()
-    context.logger.info("Request to chat service: ", chat_service_address)
-    chat_channel = grpc.insecure_channel(chat_service_address)
-    return chat_pb2_grpc.ChatServiceManagerStub(chat_channel), chat_service_address
-
-
 @app.route("/user-service/register", methods=["POST"])
 def register_user():
     data = request.get_json()
     try:
-        user_service_stub, user_service_address = get_user_service_stub()
         response = retry.retry_request_with_circuit_breaker(
-            stub_method=user_service_stub.RegisterUser,
+            stub_method=lambda channel, request, timeout: user_pb2_grpc.UserServiceManagerStub(channel).RegisterUser(
+                request, timeout=timeout),
             request_data=user_pb2.RegisterUserRequest(
                 username=data["username"], email=data["email"], password=data["password"]),
-            service_address=user_service_address,
+            load_balancer=context.user_service_load_balancer,
             circuit_breaker=context.user_service_circuit_breaker,
             logger=context.logger
         )
@@ -55,12 +41,12 @@ def register_user():
 def login_user():
     data = request.get_json()
     try:
-        user_service_stub, user_service_address = get_user_service_stub()
         response = retry.retry_request_with_circuit_breaker(
-            stub_method=user_service_stub.LoginUser,
+            stub_method=lambda channel, request, timeout: user_pb2_grpc.UserServiceManagerStub(channel).LoginUser(
+                request, timeout=timeout),
             request_data=user_pb2.LoginUserRequest(
                 email=data["email"], password=data["password"]),
-            service_address=user_service_address,
+            load_balancer=context.user_service_load_balancer,
             circuit_breaker=context.user_service_circuit_breaker,
             logger=context.logger
         )
@@ -78,14 +64,13 @@ def get_user_profile(user_id):
         return json.loads(cached_profile)
 
     try:
-        user_service_stub, user_service_address = get_user_service_stub()
-
         response = retry.retry_request_with_circuit_breaker(
-            stub_method=user_service_stub.GetUserProfile,
+            stub_method=lambda channel, request, timeout: user_pb2_grpc.UserServiceManagerStub(channel).GetUserProfile(
+                request, timeout=timeout),
             request_data=user_pb2.GetUserProfileRequest(
                 user_id=user_id
             ),
-            service_address=user_service_address,
+            load_balancer=context.user_service_load_balancer,
             circuit_breaker=context.user_service_circuit_breaker,
             logger=context.logger
         )
@@ -105,12 +90,12 @@ def get_user_profile(user_id):
 def send_private_message():
     data = request.get_json()
     try:
-        chat_service_stub, chat_service_address = get_chat_service_stub()
         response = retry.retry_request_with_circuit_breaker(
-            stub_method=chat_service_stub.SendPrivateMessage,
+            stub_method=lambda channel, request, timeout: chat_pb2_grpc.ChatServiceManagerStub(channel).SendPrivateMessage(
+                request, timeout=timeout),
             request_data=chat_pb2.SendPrivateMessageRequest(
                 sender_id=data["sender_id"], receiver_id=data["receiver_id"], message=data["message"]),
-            service_address=chat_service_address,
+            load_balancer=context.chat_service_load_balancer,
             circuit_breaker=context.chat_service_circuit_breaker,
             logger=context.logger
         )
@@ -123,12 +108,12 @@ def send_private_message():
 def get_private_chat_history(receiver_id):
     data = request.get_json()
     try:
-        chat_service_stub, chat_service_address = get_chat_service_stub()
         response = retry.retry_request_with_circuit_breaker(
-            stub_method=chat_service_stub.GetPrivateChatHistory,
+            stub_method=lambda channel, request, timeout: chat_pb2_grpc.ChatServiceManagerStub(channel).GetPrivateChatHistory(
+                request, timeout=timeout),
             request_data=chat_pb2.GetPrivateChatHistoryRequest(
                 sender_id=data["sender_id"], receiver_id=receiver_id),
-            service_address=chat_service_address,
+            load_balancer=context.chat_service_load_balancer,
             circuit_breaker=context.chat_service_circuit_breaker,
             logger=context.logger
         )
@@ -150,15 +135,15 @@ def get_private_chat_history(receiver_id):
 def create_room():
     data = request.get_json()
     try:
-        chat_service_stub, chat_service_address = get_chat_service_stub()
         response = retry.retry_request_with_circuit_breaker(
-            stub_method=chat_service_stub.CreateRoom,
+            stub_method=lambda channel, request, timeout: chat_pb2_grpc.ChatServiceManagerStub(channel).CreateRoom(
+                request, timeout=timeout),
             request_data=chat_pb2.CreateRoomRequest(
                 room_name=data["room_name"],
                 creator_id=data["creator_id"],
                 members_ids=data["members_ids"]
             ),
-            service_address=chat_service_address,
+            load_balancer=context.chat_service_load_balancer,
             circuit_breaker=context.chat_service_circuit_breaker,
             logger=context.logger
         )
@@ -171,14 +156,14 @@ def create_room():
 def add_room_member(room_id):
     data = request.get_json()
     try:
-        chat_service_stub, chat_service_address = get_chat_service_stub()
         response = retry.retry_request_with_circuit_breaker(
-            stub_method=chat_service_stub.AddUserToRoom,
+            stub_method=lambda channel, request, timeout: chat_pb2_grpc.ChatServiceManagerStub(channel).AddUserToRoom(
+                request, timeout=timeout),
             request_data=chat_pb2.AddUserToRoomRequest(
                 room_id=room_id,
                 user_id=data["user_id"]
             ),
-            service_address=chat_service_address,
+            load_balancer=context.chat_service_load_balancer,
             circuit_breaker=context.chat_service_circuit_breaker,
             logger=context.logger
         )
@@ -190,13 +175,13 @@ def add_room_member(room_id):
 @ app.route('/chat-service/rooms/<room_id>', methods=['GET'])
 def get_room_chat_history(room_id):
     try:
-        chat_service_stub, chat_service_address = get_chat_service_stub()
         response = retry.retry_request_with_circuit_breaker(
-            stub_method=chat_service_stub.GetRoomHistory,
+            stub_method=lambda channel, request, timeout: chat_pb2_grpc.ChatServiceManagerStub(channel).GetRoomHistory(
+                request, timeout=timeout),
             request_data=chat_pb2.GetRoomHistoryRequest(
                 room_id=room_id
             ),
-            service_address=chat_service_address,
+            load_balancer=context.chat_service_load_balancer,
             circuit_breaker=context.chat_service_circuit_breaker,
             logger=context.logger
         )
@@ -220,14 +205,14 @@ def get_room_chat_history(room_id):
 def leave_room(room_id):
     data = request.get_json()
     try:
-        chat_service_stub, chat_service_address = get_chat_service_stub()
         response = retry.retry_request_with_circuit_breaker(
-            stub_method=chat_service_stub.LeaveRoom,
+            stub_method=lambda channel, request, timeout: chat_pb2_grpc.ChatServiceManagerStub(channel).LeaveRoom(
+                request, timeout=timeout),
             request_data=chat_pb2.LeaveRoomRequest(
                 room_id=room_id,
                 user_id=data["user_id"]
             ),
-            service_address=chat_service_address,
+            load_balancer=context.chat_service_load_balancer,
             circuit_breaker=context.chat_service_circuit_breaker,
             logger=context.logger
         )
@@ -271,11 +256,11 @@ def chat_service_status():
 def timeout():
     empty = user_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
     try:
-        user_service_stub, user_service_address = get_user_service_stub()
         retry.retry_request_with_circuit_breaker(
-            stub_method=user_service_stub.Timeout,
+            stub_method=lambda channel, request, timeout: user_pb2_grpc.UserServiceManagerStub(channel).Timeout(
+                request, timeout=timeout),
             request_data=empty,
-            service_address=user_service_address,
+            load_balancer=context.user_service_load_balancer,
             circuit_breaker=context.user_service_circuit_breaker,
             logger=context.logger
         )
