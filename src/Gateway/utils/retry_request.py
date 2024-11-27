@@ -2,9 +2,10 @@ import grpc  # type: ignore
 
 
 def retry_request_with_circuit_breaker(
-    stub_method, request_data, load_balancer, circuit_breaker, logger, max_retries=3
+    stub_method, request_data, load_balancer, circuit_breaker, logger, max_retries=3, max_reroutes=1
 ):
     failed_servers = set()
+    reroutes = 0
 
     while True:
         service_address = load_balancer.get_server()
@@ -43,7 +44,13 @@ def retry_request_with_circuit_breaker(
                     circuit_breaker.record_failure(service_address)
                     failed_servers.add(service_address)
 
-        # If the loop exits, move to the next server
-        if len(failed_servers) >= len(load_balancer.servers):
-            logger.error("All servers failed after retries.")
-            raise Exception("All servers failed after retries.")
+        reroutes += 1
+        # If reroutes exceeded the limit, break
+        if reroutes > max_reroutes:
+            break
+
+    # If we reach here, reroutes exceeded the limit
+    logger.error(
+        "Maximum reroutes exceeded. All servers failed after retries.")
+    raise Exception(
+        "Maximum reroutes exceeded. All servers failed after retries.")

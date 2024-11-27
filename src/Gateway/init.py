@@ -32,9 +32,9 @@ class Initializer:
         self.chat_service_addresses = self.registry_client.discover_services(
             self.chat_service_name)
         self.user_service_circuit_breaker = cb.CircuitBreaker(
-            3, 5, self.logger)
+            2, 5, self.logger)
         self.chat_service_circuit_breaker = cb.CircuitBreaker(
-            3, 5, self.logger)
+            2, 5, self.logger)
         self.user_service_load_balancer = lb.RoundRobinLoadBalancer(
             self.user_service_addresses, self.user_service_circuit_breaker)
         self.chat_service_load_balancer = lb.RoundRobinLoadBalancer(
