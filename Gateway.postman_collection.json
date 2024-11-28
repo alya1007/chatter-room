@@ -1,0 +1,390 @@
+{
+	"info": {
+		"_postman_id": "142c14ab-3636-45ef-afb3-d0f5376caaf4",
+		"name": "Gateway",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "26138017"
+	},
+	"item": [
+		{
+			"name": "User Service",
+			"item": [
+				{
+					"name": "user register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"valery.kemp@gmail.com\",\n    \"username\": \"valery\",\n    \"password\": \"123123123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:5000/user-service/register",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"user-service",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "user login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"jennifer.parker@gmail.com\",\n    \"password\": \"123123123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:5000/user-service/login",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"user-service",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "user profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:5000/user-service/users/671e62b8f927775ba0269002",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"user-service",
+								"users",
+								"671e62b8f927775ba0269002"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "user service status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:5000/user-service/status",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"user-service",
+								"status"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Chat Service",
+			"item": [
+				{
+					"name": "Private",
+					"item": [
+						{
+							"name": "chat private send",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"sender_id\": \"671e62b8f927775ba0269002\",\n    \"receiver_id\": \"671e6383f927775ba0269003\",\n    \"message\": \"how are you\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "localhost:5000/chat-service/private/send",
+									"host": [
+										"localhost"
+									],
+									"port": "5000",
+									"path": [
+										"chat-service",
+										"private",
+										"send"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "chat private history",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"sender_id\": \"671e62b8f927775ba0269002\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "localhost:5000/chat-service/private/671e6383f927775ba0269003",
+									"host": [
+										"localhost"
+									],
+									"port": "5000",
+									"path": [
+										"chat-service",
+										"private",
+										"671e6383f927775ba0269003"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Room",
+					"item": [
+						{
+							"name": "chat room create",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"room_name\": \"random room 2\",\n    \"creator_id\": \"671e62b8f927775ba0269002\",\n    \"members_ids\": [\"671e6383f927775ba0269003\", \"671e6421f927775ba0269005\"]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "localhost:5000/chat-service/rooms/create",
+									"host": [
+										"localhost"
+									],
+									"port": "5000",
+									"path": [
+										"chat-service",
+										"rooms",
+										"create"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "chat room add user",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"user_id\": \"671e73ca1c38b00dacd83b2a\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "localhost:5000/chat-service/rooms/671e6eb3cc4f56956731180e/add",
+									"host": [
+										"localhost"
+									],
+									"port": "5000",
+									"path": [
+										"chat-service",
+										"rooms",
+										"671e6eb3cc4f56956731180e",
+										"add"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "chat room history",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "localhost:5000/chat-service/rooms/671e6ce06a7e5cdfe2be3c92",
+									"host": [
+										"localhost"
+									],
+									"port": "5000",
+									"path": [
+										"chat-service",
+										"rooms",
+										"671e6ce06a7e5cdfe2be3c92"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "chat room leave",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"user_id\": \"671e73ca1c38b00dacd83b2a\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "localhost:5000/chat-service/rooms/671e6eb3cc4f56956731180e/leave",
+									"host": [
+										"localhost"
+									],
+									"port": "5000",
+									"path": [
+										"chat-service",
+										"rooms",
+										"671e6eb3cc4f56956731180e",
+										"leave"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "chat service status",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:5000/chat-service/status",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"chat-service",
+								"status"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "gateway status",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:5000/status",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"status"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "service discovery status",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:5000/discovery/status",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"discovery",
+						"status"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "expiration",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:5000/timeout",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"timeout"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
