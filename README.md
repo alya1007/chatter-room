@@ -688,3 +688,23 @@ The WebSocket Chat Service provides real-time communication for users within cha
 ```plaintext
 ws://<host>:<port>/ws/chat?userId=<user_id>&roomId=<room_id>
 ```
+
+## Running the application
+
+1. Clone the repository:
+
+```bash
+git clone git@github.com:alya1007/chatter-room.git
+```
+
+2. Navigate to the project directory:
+
+```bash
+cd chatter-room
+```
+
+3. Run the following command to start the application:
+
+```bash
+sudo docker-compose up --build
+```
