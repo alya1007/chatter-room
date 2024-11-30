@@ -9,6 +9,7 @@ def retry_request_with_circuit_breaker(
 
     while True:
         service_address = load_balancer.get_server()
+        circuit_breaker.is_service_available(service_address)
 
         if service_address in failed_servers:
             logger.info("Skipping " + service_address +
@@ -20,6 +21,7 @@ def retry_request_with_circuit_breaker(
         while retries < max_retries:
             try:
                 # Attempt the request
+                circuit_breaker.is_service_available(service_address)
                 channel = grpc.insecure_channel(service_address)
                 response = stub_method(channel, request_data, timeout=5.0)
                 logger.info(f"Request made to: {service_address}")
